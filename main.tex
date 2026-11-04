@@ -319,8 +319,9 @@ Where $S_N$ denotes the set of permutations of $\{1, \dots, N\}$. The permutatio
 
 \newpage
 
-\section{Results (work in progress...)}
+\section{Results}
 
+\subsection{Reporting Conventions}
 We ran a set of experiments on each dynamical system:
 
 \begin{itemize}
@@ -332,159 +333,79 @@ We ran a set of experiments on each dynamical system:
     \item Randomized Lyapunov-Mean models trained for 200 epochs.
 \end{itemize}
 
-The models were cross-validated on the same set of horizon values $T_{{\text{val}}} \in \{1, \dots,10\}$ that was used for training. For each seed and $T_{\text{val}}$, the error is the MSE averaged over the first $T_{\text{val}}$ steps of an autoregressive rollout. As a performance measure we report (1) the median of the one-step MSE across 20 seeds ($T_{\text{val}} = 1$) and (2) the median over all 20 seeds × 10 values of $T_{\text{val}}$. Each yields a single value per method, enabling a straightforward comparison.
+The models were cross-validated on the same set of horizon values $T_{{\text{val}}} \in \{1, \dots,10\}$ that was used for training. For each seed and $T_{\text{val}}$, the error is the MSE averaged over the first $T_{\text{val}}$ steps of an autoregressive rollout. As a performance measure we report the median across 20 seeds: (1) of the one-step MSE ($T_{\text{val}} = 1$) and (2) pooled over all validation horizons $T_{\mathrm{val}}=1,\dots,10$. Each yields a single value per method, enabling a straightforward comparison.
+
+For every scope, the reference baseline is the fixed-horizon model whose training horizon $T^*$ achieves the lowest median validation MSE among $T \in \{1,\dots,10\}$. $T^*$ is selected separately for each scope and each training regime.
+
+Adaptive models trained for 200 epochs are compared with fixed models trained for 200 epochs. Budget-based LM models are compared with fixed models trained for 20 epochs. Each table reports the median MSE with a 95\% confidence interval over seeds, the ratio of the medians to the reference (values below 1 favor the method) and the number of seeds on which the method beats the reference. Significance is assessed with a two-sided exact sign test over seeds, Holm-corrected within each timestep and scope. (!!! significance - to be verified)
 
 \subsection{General Observations}
+\label{sec:general-observations}
 
-Comparing the 
+\input{tables/table_horizons}
 
-\subsection{Lorenz System}
-
-The table below (see Tab. \ref{tab:lorenz_mse_results}) shows the comparison of the training session for the Lorenz attractor where $T_{\max} = 10$, which means that:
-
-\begin{itemize}
-    \item Fixed models were trained for $T \in \{1, 2, ..., 10\}$ for 20 epochs each,
-    \item Linear Scheduler models were trained for 200 epochs until $T_{\max} = 10$,
-    \item Linear Scheduler models with ES were usually trained for 100-120 epochs until ES conditions were met,
-    \item Cross-Validation-Based models were usually trained for 100-120 epochs until the online validation conditions were met,
-    \item Lyapunov-Based models used the mean summed time used to train all fixed models until $T=10$.
-\end{itemize}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{cccc}
-\toprule
-\makecell{Method} & \makecell{MSE $\pm$ 95\% CI} \\
-\midrule
-Fixed $T=3$ & 0.003857 $\pm$ 0.000398 \\
-Linear Scheduler & 0.004153 $\pm$ 0.000286 \\
-Linear Scheduler with ES & 0.003605 $\pm$ 0.000281 \\
-Lyapunov-Based ($\sigma=5$) & 0.003318 $\pm$ 0.000469 \\
-Lyapunov-Based ($\sigma=3$) & 0.003668 $\pm$ 0.000248 \\
-Cross-Validation-Based & \textbf{0.003295 $\pm$ 0.000341} \\
-\bottomrule
-\end{tabular}
-\caption{Lorenz: Median MSE at $T_{\text{val}}=1$ over 20 seeds, with 95\% confidence intervals.}
-\label{tab:lorenz_mse_results}
-\end{table}
-
-Cross-Validation-Based models yield the best results across all considered methods, showing consistent improvements over the fixed baseline across all budgets from $T_{\max} = 3$ onward. This result suggests that part of the benefit may come not only from adapting the horizon itself, but also from avoiding excessive training at large horizons once validation performance stops improving. Early stopping therefore acts as a stabilizing mechanism, preventing the model from entering training regimes where the forecasting target becomes too difficult or noisy.
-
-The Lyapunov-Based method with $\sigma=5$ is a close second and performs better than the corresponding variant with $\sigma=3$. In the budget comparison for $\sigma=5$, the best fixed-horizon baseline has a lower marginal median MSE for
-$T_{\max} \in \{1, 2, ..., 7\}$, while the Adaptive Horizon model has a lower marginal median for $T_{\max} \in \{8, 9, 10\}$. Effectively, the advantage of the adaptive horizontal model appears only once the available training budget becomes sufficiently large. In low-budget settings, the additional variability introduced by adaptive horizons may instead make the optimization problem harder. Additionally, training time constraints keep the number of epochs that models are trained on low, as a lot of computational resources is used for LLE calculation. This suggests that adaptive horizon training may require enough exposure to longer rollout regimes before its benefits become visible.
-
-Tables \ref{tab:budget_comparison_cv} and \ref{tab:budget_comparison_ah5} present a detailed comparison of the two best methods. The difference $\Delta = \text{MSE}_{\text{fixed}} - \text{MSE}_{\text{adaptive}}$ is visualized in Figures \ref{fig:budget_deltas_cv} and \ref{fig:budget_deltas_ah5}.
-
-\begin{table}[ht]
-\centering
-\small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{cccccc}
-\toprule
-$T_{\max}$ &
-\makecell{Best \\ fixed $T$} &
-\makecell{Fixed MSE} &
-\makecell{Adaptive MSE} &
-$\Delta$ &
-\makecell{Adaptive \\ win rate} \\
-\midrule
-  2  & 2 & $\mathbf{0.003946 \pm 0.000376}$ & $0.004673 \pm 0.000587$ & $-0.000173$ & 40\% \\
-  3  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.003923 \pm 0.000436$ & $+0.000206$ & 65\% \\
-  4  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003410 \pm 0.000403}$ & $+0.000480$ & 75\% \\
-  5  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003644 \pm 0.000386}$ & $+0.000565$ & 65\% \\
-  6  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003401 \pm 0.000348}$ & $+0.000748$ & 65\% \\
-  7  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003797 \pm 0.000358}$ & $+0.000572$ & 65\% \\
-  8  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003576 \pm 0.000341}$ & $+0.000505$ & 70\% \\
-  9  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003386 \pm 0.000349}$ & $+0.000643$ & 85\% \\
-  10 & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003295 \pm 0.000341}$ & $+0.000665$ & 80\% \\
-\bottomrule
-\end{tabular}%
-}
-\caption{Budget-based comparison for $T_{\text{val}} = 1$ between the Cross-Validation-Based method and the best fixed-horizon baseline available under each budget. Each MSE is the median over 20 seeds with a 95\% confidence interval. The reported $\Delta$ is the median of the 20 paired per-seed differences $\text{MSE}_{\text{fixed}}-\text{MSE}_{\text{CV-based}}$. Positive $\Delta$ favors the Cross-Validation Based method. The $T_{\max}=1$ case is omitted because the adaptive and fixed models are equivalent.}
-\label{tab:budget_comparison_cv}
-\end{table}
-
-\begin{table}[ht]
-\centering
-\small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{cccccc}
-\toprule
-$T_{\max}$ &
-\makecell{Best \\ fixed $T$} &
-\makecell{Fixed MSE} &
-\makecell{Adaptive MSE} &
-$\Delta$ &
-\makecell{Adaptive \\ win rate} \\
-\midrule
-  1  & 1 & $\mathbf{0.005573 \pm 0.000844}$ & $0.007994 \pm 0.003158$ & $-0.000935$ & 45\% \\
-  2  & 2 & $\mathbf{0.003946 \pm 0.000376}$ & $0.005904 \pm 0.001316$ & $-0.001588$ & 15\% \\
-  3  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.005178 \pm 0.000396$ & $-0.001049$ & 10\% \\
-  4  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.004675 \pm 0.000432$ & $-0.000379$ & 25\% \\
-  5  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.004151 \pm 0.000444$ & $-0.000254$ & 35\% \\
-  6  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.003878 \pm 0.000452$ & $+0.000031$ & 50\% \\
-  7  & 3 & $\mathbf{0.003857 \pm 0.000398}$ & $0.003865 \pm 0.000479$ & $+0.000091$ & 55\% \\
-  8  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003709 \pm 0.000515}$ & $+0.000106$ & 75\% \\
-  9  & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003406 \pm 0.000533}$ & $+0.000428$ & 75\% \\
-  10 & 3 & $0.003857 \pm 0.000398$ & $\mathbf{0.003318 \pm 0.000469}$ & $+0.000536$ & 75\% \\
-\bottomrule
-\end{tabular}%
-}
-\caption{Budget-based comparison for $T_{\text{val}} = 1$ between the Lyapunov-Based with $\sigma=5$ models and the best fixed-horizon baseline available under each budget. Each MSE is the median over 20 seeds with 95\% confidence intervals. The reported $\Delta$ is the median of the 20 paired per-seed differences $\text{MSE}_{\text{fixed}}-\text{MSE}_{\text{adaptive}}$. Positive
-$\Delta$ favors the adaptive model.}
-\label{tab:budget_comparison_ah5}
-\end{table}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figs/budget_comparison_cv.png}
-    \caption{Budget-based comparison of the best fixed ($T = 3$) and Cross-Validation Based models.}
-    \label{fig:budget_deltas_cv}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/fixed_horizon_curves.pdf}
+  \caption{Validation error of fixed-horizon models as a function of the training horizon $T$, pooled over all validation horizons. Each curve shows the median MSE over 20 seeds relative to the best 200-epoch fixed model of the same panel (log scale). Enlarged markers indicate the cross-validated optimum $T^*$; the dashed line marks the base horizon $T_{\mathrm{base}}$ chosen by LM before
+  training.}
+  \label{fig:fixed-horizon-curves}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\linewidth]{figs/budget_comparison_ah5.png}
-    \caption{Budget-based comparison of the best fixed ($T = 3$) and Adaptive Horizon models centered around $\sigma = 5$. Function flattens for fixed model because model trained with $T = 3$ outperforms models with larger $T$ values and it is therefore selected as the best.}
-    \label{fig:budget_deltas_ah5}
+\paragraph{Base horizon selected by LM.}
+The estimated largest Lyapunov exponent is very stable across different $\Delta t$: $\hat\lambda = 0.904 - 0.905$ for Lorenz-63, $1.173 - 1.182$ for Lorenz-96 and $0.193 - 0.196$ for Rössler (Table~\ref{tab:horizons}).
+
+With $\gamma = 0.45$, the rule $T_{\mathrm{base}} = \frac{\gamma}{\hat\lambda_{\max} \Delta t}$ gives 10, 6 and 5 steps for Lorenz-63 and 8, 5 and 4 steps for Lorenz-96 at $\Delta t = 0.05, 0.08, 0.1$. In units of Lyapunov time, this is 0.43 - 0.47 for both systems; the deviation from $\gamma$ is due to rounding. For Rössler, the slow divergence yields unclipped horizons of 23 - 47 steps, which are clipped to $T_{\mathrm{max}} = 10$. The resulting horizon is therefore only 0.10 - 0.20 Lyapunov times and no longer follows the intended scaling.
+
+\paragraph{Cross-validated fixed horizon.}
+Over all validation horizons, the optimal fixed horizon after 20 epochs is 7, 5 and 4 steps for Lorenz-63, 5, 4 and 4 for Lorenz-96 and 9, 8 and 7 for Rössler. After 200 epochs it is 8, 6 and 6; 7, 5, and 4; and 10 at every timestep for Rössler.
+Longer training never shortens the optimum. It lengthens it by one to three steps in 8 of the 9 configurations. Fig.~\ref{fig:fixed-horizon-curves} shows why: after 20 epochs the error grows steeply beyond $T^*$ (on Lorenz-63 at $\Delta t = 0.1$, training at $T = 10$ is 7.9 times worse than the optimum), whereas after 200 epochs the right flank is considerably flatter (3.1 times).
+
+Long-horizon training needs more optimization to pay off. Expressed in
+Lyapunov times, the 200-epoch optima of Lorenz-63 and Lorenz-96 lie between 0.36 and 0.54, so the a-priori choice $\gamma = 0.45$ falls within this range. For Rössler, the error decreases monotonically and is within 10\% of its minimum for all $T \geq 5 - 6$. The optimum lies at the boundary of the search range and cannot be identified for $T \leq 10$.
+
+\paragraph{Agreement between $\mathbf{T_{\mathrm{base}}}$ and $\mathbf{T^*}$.}
+For the 200-epoch regime and the pooled validation error, $T_{\mathrm{base}}$ coincides with $T^*$ in three of the six Lorenz configurations (Lorenz-63 at $\Delta t = 0.08$, Lorenz-96 at $\Delta t = 0.08$ and $0.1$). A fixed model trained at $T_{\mathrm{base}}$ would therefore be at most 7.4\% worse than the oracle in five of six cases. The exception is Lorenz-63 at $\Delta t = 0.1$ (+37\%). There, the 200-epoch curve is non-monotone: $T=4$ and $T=6$ are both near-optimal, but $T=5$ is not, so the excess is due to variability between neighboring horizons rather than to a systematic bias of $T_{\mathrm{base}}$. Compared with the 20-epoch optimum, $T_{\mathrm{base}}$ is never shorter and is up to three steps longer. The Lyapunov-based rule thus anticipates the optimum of well-trained models rather than that of short training. The agreement for Rössler (both at $T = 10$) is trivial, since both are bounded by $T_{\mathrm{max}}$.
+
+\paragraph{Short-term versus pooled optimum.}
+The optimal horizon for one-step accuracy is consistently shorter than for the pooled error. After 200 epochs, $T^*_{T_{\mathrm{val}}=1}$ is 4, 2 and 4 steps for Lorenz-63, 6, 4 and 3 for Lorenz-96, and 4, 3 and 3 for Rössler, while the pooled
+optima are up to seven steps longer. Since $T_{\mathrm{base}}$ targets
+multi-step predictability, it is always at least as long as the one-step optimum and exceeds it by more than two steps in five of the nine configurations. This explains why LM performs worse relative to the fixed baseline at $T_{\mathrm{val}}=1$ than over the full validation window: training for long-horizon stability costs some one-step accuracy.
+
+\subsection{Lorenz-63}
+
+\input{tables/table_lorenz}
+
+Under an equal rollout-step budget, LM reduces the error over all validation horizons by 12 - 33\% relative to the best 20-epoch fixed model (Table~\ref{tab:results-lorenz}). Only the improvement at $\Delta t=0.08$ is significant after correction (ratio 0.67, 18/20 seeds). At the first validation step, the picture reverses: LM is no better than the fixed optimum and is significantly worse at $\Delta t=0.05$ (1.26). When both are trained for 200 epochs, LM stays within 10\% of the oracle fixed horizon over all validation horizons (0.95--1.09, none significant). It is 20--29\% worse at $T_{\mathrm{val}}=1$, where the optimal fixed horizon is much shorter (see Section~\ref{sec:general-observations}). Lorenz-63 is the only system on which the FTLE-based assignment of horizons pays off. At $\Delta t=0.08$ and $0.1$, randomly permuting the horizons (LMR) increases the one-step error by 27\% and 32\% relative to LM (significant at $\Delta t = 0.1$). The pooled differences
+point the same way but are not significant. The linear scheduler (LS) is the weakest method, with 1.2 - 2.6 times the error of the fixed optimum.
+
+\subsection{Rössler}
+
+\input{tables/table_rossler}
+
+In the Rossler system, no adaptive method improves on the fixed optimum (Table~\ref{tab:results-rossler}). The budget-matched LM is within 4\% of the 20-epoch optimum at $\Delta t=0.05$ and is 7--14\% worse at the larger timesteps (significant at $\Delta t=0.08$). After 200 epochs, LM is 3--4\% worse than the fixed optimum over all validation horizons. As on Lorenz-96, the permuted horizons are slightly better than the FTLE-based ones (LMR/LM 0.93 - 1.00, significant at $\Delta t=0.05$ and $0.1$). For this system, however,
+the comparison is weak: with $T_{\mathrm{base}}$ clipped to the upper bound, both variants train almost exclusively at $T\in\{9,10\}$, so the assignment has little room to matter. LS diverges at $\Delta t=0.05$ (23 times the reference error) and is within 4\% of the fixed optimum otherwise.
+
+\subsection{Lorenz-96}
+
+\input{tables/table_lorenz96}
+
+Lorenz-96 gives the clearest result for the budget-matched LM: it improves on the best 20-epoch fixed model at every timestep and in both scopes. The gain is 11 - 22\% over all validation horizons (18 - 20 of 20 seeds, $p<0.01$) and 5 - 11\% at $T_{\mathrm{val}}=1$ (Table~\ref{tab:results-lorenz96}). At equal training length (200 epochs), LM is consistently but only slightly worse than the oracle fixed horizon (3 - 10\% over all validation horizons, significant at
+every timestep). The FTLE ablation shows no benefit of the FTLE-based
+assignment: LMR is 3 - 6\% \emph{better} than LM over all validation horizons (significant at all three timesteps) and indistinguishable at
+$T_{\mathrm{val}}=1$. LS fails on this system, with 2.3 - 4.7 times the error of the fixed optimum and no winning seed.
+
+\subsection{Summary across systems}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/summary_heatmap.pdf}
+  \caption{MSE ratio of each method to its reference for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). Blue cells favor the method, red cells the reference; the color scale is logarithmic and saturates at ratios of $0.5$ and $2$. $^{*}$/$^{**}$: $p<0.05$/$p<0.01$, Holm-corrected sign test over 20 seeds.}
+  \label{fig:summary-heatmap}
 \end{figure}
 
-The budget-based results show that the relative performance of the adaptive and fixed-horizon methods depends on both the training method and the available computational budget. The Adaptive Horizon method requires a sufficiently large budget before outperforming the best fixed-horizon baseline, whereas the Linear Scheduler with ES achieves a lower marginal median MSE for every budget
-considered below. Please note that in the case of ES, adaptive training uses less resources than equivalent fixed models.
-
-The results suggest that exposing the model to multiple training
-horizons can improve single-step forecast performance when the training
-budget is controlled. At $T_{\text{val}}=1$, the best fixed-horizon
-baseline, trained with $T=3$, achieves a median MSE of 0.003857. The
-Linear Scheduler with Early Stopping reduces this value to 0.003605.
-The lowest observed median among the verified 20-seed methods is
-obtained by the Cross-Validation Based method, with an MSE of 0.003295,
-followed closely by the Adaptive Horizon method with $\sigma=5$, with
-an MSE of 0.003318. These results indicate that adapting the training
-horizon or the stopping point can provide a more effective training
-signal than selecting a single fixed horizon when performance is
-evaluated at $T_{\text{val}}=1$.
-
-\subsection{Rossler System}
-
-The models were trained with the same objective as Lorenz.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{cc}
-\toprule
-\makecell{Method} & \makecell{MSE $\pm$ 95\% CI} \\
-\midrule
-Fixed $T=3$ & \textbf{0.003831 $\pm$ 0.000120} \\
-Linear Scheduler & 0.003995 $\pm$ 0.004150 \\
-Linear Scheduler with ES & 0.003973 $\pm$ 0.004156 \\
-Lyapunov-Based ($\sigma=5$) & 0.004148 $\pm$ 0.000032 \\
-Cross-Validation-Based & 0.003911 $\pm$ 0.000297 \\
-\bottomrule
-\end{tabular}
-\caption{Rossler: Median MSE at $T_{\mathrm{val}}=1$ over 20 seeds, with 95\% confidence intervals.}
-\label{tab:rossler_mse_results}
-\end{table}
+Figure~\ref{fig:summary-heatmap} condenses the three tables. LM trained with the rollout budget of a fixed-horizon sweep matches or beats the best fixed model of that sweep on both chaotic systems with $\hat\lambda_1 \approx 1$, but not on Rössler. At equal training length, LM is roughly 10\% of an oracle choice of the fixed horizon in all systems. LS is the least reliable method. Assigning horizons by the local FTLE gives a measurable advantage only on
+Lorenz-63 at short validation horizons. Elsewhere, randomly permuted horizons perform as well or slightly better. This indicates that most of LM's benefit comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
 
 \clearpage
 \bibliographystyle{plain}
