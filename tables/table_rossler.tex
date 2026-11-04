@@ -1,14 +1,7 @@
 \begin{table}[p]
   \centering
-  \caption{Rössler: test MSE ($\times 10^{-3}$, normalised coordinates) at the
-  first validation step ($T_{\mathrm{val}}=1$) and pooled over all validation
-  horizons ($T_{\mathrm{val}}=1,\dots,10$). MSE: median over 20 seeds (and
-  validation horizons), 95\% seed-bootstrap CI in brackets. Ratio: median MSE
-  relative to the fixed model with the cross-validated horizon $T^*$ of the same
-  training regime (for the last row: LMR relative to LM); values below 1 favour
-  the method. Wins: seeds on which the method beats the reference.
-  \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, two-sided exact sign test,
-  Holm-corrected within each $\Delta t$ and scope; bold: significant improvement.
+  \caption{Rössler: validation MSE ($\times 10^{-3}$, normalised coordinates) at the first validation step ($T_{\mathrm{val}}=1$) and pooled over all validation horizons ($T_{\mathrm{val}}=1,\dots,10$). MSE: median over 20 seeds (and validation horizons), 95\% seed-bootstrap CI in brackets. Ratio: median MSE relative to the fixed model with the cross-validated horizon $T^*$ of the same training regime (for the last row: LMR relative to LM); values below 1 favour the method. Wins: seeds on which the method beats the reference.
+  \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, two-sided exact sign test, Holm-corrected within each $\Delta t$ and scope; bold: significant improvement.
   $T^*$ is given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$.}
   \label{tab:results-rossler}
   \small
@@ -25,20 +18,22 @@
     \quad LM (equal budget) & 1.93 {\scriptsize[1.91, 1.94]} & 1.06 & 8/20 & 5.15 {\scriptsize[5.09, 5.27]} & 0.96 & 13/20 \\
     \multicolumn{7}{l}{\quad\textit{200 epochs}} \\
     \quad Fixed ($T^*=4/10$) & 1.81 {\scriptsize[1.78, 1.82]} & -- & -- & 4.99 {\scriptsize[4.82, 5.24]} & -- & -- \\
-    \quad LM & 1.94 {\scriptsize[1.87, 1.96]} & 1.07 & 5/20 & 5.19 {\scriptsize[5.06, 5.32]} & 1.04 & 9/20 \\
-    \quad LMR & 1.87 {\scriptsize[1.86, 1.89]} & 1.04 & 7/20 & 5.06 {\scriptsize[4.80, 5.34]} & 1.01 & 15/20 \\
-    \quad LS & 20.7 {\scriptsize[20.6, 20.9]} & 11.46\textsuperscript{\textdaggerdbl} & 0/20 & 117 {\scriptsize[70.3, 127]} & 23.44\textsuperscript{\textdaggerdbl} & 2/20 \\
+    \quad LM & 1.94 {\scriptsize[1.87, 1.96]} & 1.07 & 5/20 & 5.19 {\scriptsize[5.04, 5.32]} & 1.04 & 9/20 \\
+    \quad LMR & 1.87 {\scriptsize[1.86, 1.89]} & 1.04 & 7/20 & 5.06 {\scriptsize[4.80, 5.35]} & 1.01 & 15/20 \\
+    \quad LS & 20.7 {\scriptsize[20.6, 20.9]} & 11.46\textsuperscript{\textdaggerdbl} & 0/20 & 117 {\scriptsize[70.4, 127]} & 23.44\textsuperscript{\textdaggerdbl} & 2/20 \\
+    \quad CV & 20.5 {\scriptsize[20.2, 20.8]} & 11.37\textsuperscript{\textdaggerdbl} & 0/20 & 95.2 {\scriptsize[44.5, 118]} & 19.09\textsuperscript{\textdaggerdbl} & 2/20 \\
     \quad LMR vs.\ LM & -- & \textbf{0.97}\textsuperscript{\textdagger} & 17/20 & -- & \textbf{0.97}\textsuperscript{\textdagger} & 16/20 \\
     \midrule
     \multicolumn{7}{l}{$\Delta t = 0.08$} \\
     \multicolumn{7}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
-    \quad Fixed ($T^*=8/8$) & 2.78 {\scriptsize[2.64, 3.04]} & -- & -- & 5.30 {\scriptsize[5.13, 5.58]} & -- & -- \\
+    \quad Fixed ($T^*=8/8$) & 2.78 {\scriptsize[2.64, 3.04]} & -- & -- & 5.30 {\scriptsize[5.13, 5.57]} & -- & -- \\
     \quad LM (equal budget) & 3.31 {\scriptsize[3.28, 3.35]} & 1.19\textsuperscript{\textdagger} & 3/20 & 6.02 {\scriptsize[5.88, 6.06]} & 1.14\textsuperscript{\textdagger} & 3/20 \\
     \multicolumn{7}{l}{\quad\textit{200 epochs}} \\
-    \quad Fixed ($T^*=3/10$) & 3.13 {\scriptsize[3.09, 3.17]} & -- & -- & 5.74 {\scriptsize[5.68, 5.93]} & -- & -- \\
-    \quad LM & 3.32 {\scriptsize[3.28, 3.34]} & 1.06\textsuperscript{\textdagger} & 4/20 & 5.90 {\scriptsize[5.86, 6.05]} & 1.03\textsuperscript{\textdagger} & 4/20 \\
+    \quad Fixed ($T^*=3/10$) & 3.13 {\scriptsize[3.09, 3.17]} & -- & -- & 5.74 {\scriptsize[5.68, 5.92]} & -- & -- \\
+    \quad LM & 3.32 {\scriptsize[3.28, 3.34]} & 1.06\textsuperscript{\textdagger} & 4/20 & 5.90 {\scriptsize[5.85, 6.05]} & 1.03 & 4/20 \\
     \quad LMR & 3.23 {\scriptsize[3.21, 3.26]} & 1.03\textsuperscript{\textdagger} & 3/20 & 5.88 {\scriptsize[5.72, 5.96]} & 1.02 & 7/20 \\
-    \quad LS & 3.26 {\scriptsize[3.22, 3.36]} & 1.04\textsuperscript{\textdaggerdbl} & 2/20 & 5.99 {\scriptsize[5.92, 6.18]} & 1.04 & 5/20 \\
+    \quad LS & 3.26 {\scriptsize[3.22, 3.36]} & 1.04\textsuperscript{\textdaggerdbl} & 2/20 & 5.99 {\scriptsize[5.92, 6.19]} & 1.04 & 5/20 \\
+    \quad CV & 3.24 {\scriptsize[3.22, 3.35]} & 1.03\textsuperscript{\textdaggerdbl} & 2/20 & 5.96 {\scriptsize[5.91, 6.13]} & 1.04 & 8/20 \\
     \quad LMR vs.\ LM & -- & \textbf{0.97}\textsuperscript{\textdagger} & 15/20 & -- & 1.00 & 14/20 \\
     \midrule
     \multicolumn{7}{l}{$\Delta t = 0.1$} \\
@@ -47,9 +42,10 @@
     \quad LM (equal budget) & 4.69 {\scriptsize[4.67, 4.72]} & 1.17 & 5/20 & 7.07 {\scriptsize[6.85, 7.19]} & 1.07 & 5/20 \\
     \multicolumn{7}{l}{\quad\textit{200 epochs}} \\
     \quad Fixed ($T^*=3/10$) & 4.49 {\scriptsize[4.46, 4.59]} & -- & -- & 6.87 {\scriptsize[6.61, 7.05]} & -- & -- \\
-    \quad LM & 4.69 {\scriptsize[4.63, 4.76]} & 1.04 & 5/20 & 7.15 {\scriptsize[6.98, 7.26]} & 1.04\textsuperscript{\textdagger} & 3/20 \\
+    \quad LM & 4.69 {\scriptsize[4.63, 4.76]} & 1.04 & 5/20 & 7.15 {\scriptsize[6.96, 7.26]} & 1.04\textsuperscript{\textdagger} & 3/20 \\
     \quad LMR & 4.56 {\scriptsize[4.34, 4.58]} & 1.02 & 11/20 & 6.68 {\scriptsize[6.50, 7.01]} & 0.97 & 12/20 \\
-    \quad LS & 4.62 {\scriptsize[4.60, 4.68]} & 1.03\textsuperscript{\textdaggerdbl} & 2/20 & 7.16 {\scriptsize[7.05, 7.33]} & 1.04 & 7/20 \\
+    \quad LS & 4.62 {\scriptsize[4.60, 4.68]} & 1.03\textsuperscript{\textdaggerdbl} & 2/20 & 7.16 {\scriptsize[7.05, 7.34]} & 1.04 & 7/20 \\
+    \quad CV & 4.62 {\scriptsize[4.56, 4.65]} & 1.03\textsuperscript{\textdagger} & 3/20 & 7.09 {\scriptsize[6.99, 7.25]} & 1.03 & 6/20 \\
     \quad LMR vs.\ LM & -- & \textbf{0.97}\textsuperscript{\textdaggerdbl} & 19/20 & -- & \textbf{0.93}\textsuperscript{\textdagger} & 17/20 \\
     \bottomrule
   \end{tabular}
