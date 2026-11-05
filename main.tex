@@ -416,12 +416,26 @@ Lorenz-96 gives the clearest result for the budget-matched LM: it improves on th
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{figs/summary_heatmap.pdf}
-  \caption{MSE ratio of each method to its reference for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). Blue cells favor the method, red cells the reference; the color scale is logarithmic and saturates at ratios of $0.5$ and $2$. \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, Holm-corrected sign test over 20 seeds.}
-  \label{fig:summary-heatmap}
+  \includegraphics[width=\textwidth]{figs/mse_heatmap_budget.pdf}
+  \caption{Equal-budget comparison: median validation MSE ($\times 10^{-3}$, normalized coordinates) of the best 20-epoch fixed-horizon model (at its cross-validated horizon $T^*$) and of LM trained with the rollout-step budget of the full 20-epoch sweep, for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). The color shows the MSE relative to the lower of the two values in the same column (log scale, saturating at 4); the better value is set in bold. Confidence intervals and significance tests are given in Tables~\ref{tab:results-lorenz}--\ref{tab:results-lorenz96}.}
+  \label{fig:mse-heatmap-budget}
 \end{figure}
 
-Figure~\ref{fig:summary-heatmap} condenses the three tables. LM trained with the rollout budget of a fixed-horizon sweep matches or beats the best fixed-horizon model of that sweep on both systems with $\hat\lambda_{\max} \approx 1$, but not on Rössler. At equal training length, LM is within roughly 10\% of an oracle choice of the fixed horizon over all validation horizons in all systems. The two curriculum-based methods, LS and CV, are the least reliable: both collapse on Lorenz-96 and on Rössler at $\Delta t = 0.05$. Where CV trains successfully, it is close to the fixed-horizon optimum on Rössler but 14--21\% worse on Lorenz-63, and it systematically selects horizons longer than $T^*_{\mathrm{all}}$. Its online selection does not replace the grid search. Assigning horizons by the local FTLE gives a measurable advantage only on Lorenz-63 at short validation horizons. Elsewhere, randomly permuted horizons perform as well or slightly better. This indicates that most of LM's benefit comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/mse_heatmap_200.pdf}
+  \caption{Comparison at equal training length (200 epochs): median validation MSE ($\times 10^{-3}$, normalized coordinates) of the best fixed-horizon model (at its cross-validated horizon $T^*$) and of the adaptive methods LM, LMR, LS and CV, for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). The color shows the MSE relative to the lowest value in the same column (log scale, saturating at 4); the best value is set in bold. Confidence intervals and significance tests are given in Tables~\ref{tab:results-lorenz}--\ref{tab:results-lorenz96}.}
+  \label{fig:mse-heatmap-200}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/method_curves.pdf}
+  \caption{Median validation MSE over 20 seeds as a function of the validation horizon $T_{\mathrm{val}}$ (error averaged over the first $T_{\mathrm{val}}$ rollout steps; log scale, shared within a row) for every method, system and timestep. Fixed-horizon models are shown at their cross-validated horizon $T^*_{\mathrm{all}}$ (dashed). On Lorenz-96 and on Rössler at $\Delta t = 0.05$, the LS and CV curves lie on top of each other, since both methods collapse to the same solution.}
+  \label{fig:method-curves}
+\end{figure}
+
+Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three tables for the two training regimes, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. The collapse of LS and CV is visible as curves that start up to an order of magnitude above the others and saturate at long validation horizons. Elsewhere, the curves of the adaptive methods stay close to the fixed-horizon optimum. The advantage of the budget-matched LM over the 20-epoch fixed-horizon models grows with $T_{\mathrm{val}}$ on Lorenz-63 and Lorenz-96, i.e. it comes mainly from more stable long rollouts. LM trained with the rollout budget of a fixed-horizon sweep matches or beats the best fixed-horizon model of that sweep on both systems with $\hat\lambda_{\max} \approx 1$, but not on Rössler. At equal training length, LM is within roughly 10\% of an oracle choice of the fixed horizon over all validation horizons in all systems. The two curriculum-based methods, LS and CV, are the least reliable: both collapse on Lorenz-96 and on Rössler at $\Delta t = 0.05$. Where CV trains successfully, it is close to the fixed-horizon optimum on Rössler but 14--21\% worse on Lorenz-63, and it systematically selects horizons longer than $T^*_{\mathrm{all}}$. Its online selection does not replace the grid search. Assigning horizons by the local FTLE gives a measurable advantage only on Lorenz-63 at short validation horizons. Elsewhere, randomly permuted horizons perform as well or slightly better. This indicates that most of LM's benefit comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
 
 \clearpage
 \bibliographystyle{plain}
