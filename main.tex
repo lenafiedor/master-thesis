@@ -193,35 +193,9 @@ Related approaches have demonstrated the benefits of adapting temporal decisions
 \subsection{Lyapunov-Based Horizon Idea}
 \label{sec:lm-idea}
 
-Depending on the dynamical system taken into account, one needs some ground truth knowledge about the system dynamics to form initial constraints and guide hyperparameter choice. In the discussed example of the Lorenz-63 attractor, a reasonable maximal training rollout is the mean lap duration, which means the averaged time the trajectory stays on one side of the attractor ($\tau \approx 0.7$ time units). After that time, the behavior of the attractor cannot be predicted with reasonable accuracy by the definition of a chaotic system.
+Choosing a training horizon requires some prior knowledge of the system dynamics. For the Lorenz-63 attractor, for example, a reasonable maximal training rollout is the mean lap duration, i.e. the average time the trajectory stays on one side of the attractor ($\tau \approx 0.7$ time units); beyond it, the trajectory can no longer be predicted with reasonable accuracy. Since the Lyapunov time $\frac{1}{\lambda_{\max}}$ measures how long predictions remain reliable, a natural default is a training horizon equal to a fixed fraction of it.
 
-This idea can be formalized by defining the base prediction horizon as a fraction of the Lyapunov time $\frac{1}{\lambda_{\max}}$, expressed in model steps:
-
-\begin{equation} \label{eq:t-base}
-T_{\mathrm{base}} = \mathrm{clip}\left( \mathrm{round}\left( \frac{\gamma}{\hat\lambda_{\max}\,\Delta t} \right),\, 1,\, T_{\max} \right)
-\end{equation}
-
-Here, $\hat\lambda_{\max}$ is the estimate of the MLE, computed as the mean leading LLE along the training split, $\Delta t$ is the model timestep, $T_{\max} = 10$ is the largest horizon used in training, and $\gamma$, called the \emph{Lyapunov fraction}, is an empirically chosen parameter: the fraction of the Lyapunov time up to which predictions remain reliable. If $\hat\lambda_{\max} \le 0$, we set $T_{\mathrm{base}} = T_{\max}$.
-
-In addition to the MLE-informed base horizon, we extended this idea to include the local divergence rate in rollout lengths. Instead of applying a globally fixed $T$ to every point of the trajectory, the proposed approach assigns a state-dependent horizon:
-
-\begin{equation}
-T_m = h(\mathbf{x}_m),
-\end{equation}
-
-Here, $\mathbf{x}_m$ denotes the system state at step $m$ and $h$ represents a predefined or learned horizon-selection rule. The underlying hypothesis is that the appropriate prediction horizon depends on the local predictability of the dynamics.
-
-We used FTLEs as indicators of the rate at which the nearby trajectories diverge throughout the manifold. A positive and large FTLE indicates reduced predictability and motivates a shorter rollout, whereas a smaller or negative exponent suggests that longer predictions may remain informative. Denoting the FTLE at $\mathbf{x}_m$ by $\Lambda(\mathbf{x}_m)$, the selection rule is therefore expected to satisfy
-
-\begin{equation}
-\Lambda(\mathbf{x}_m) \uparrow
-\quad \Longrightarrow \quad
-T_m \downarrow.
-\end{equation}
-
-The sample-wise horizons are centered around $T_{\mathrm{base}}$ and vary depending on their FTLEs within a given range. In our experiments, we set the spread parameter $v$ to 1, so that the horizons are distributed between $T_{\mathrm{base}} - 1$ and $T_{\mathrm{base}} + 1$.
-
-The adaptive approach aims to combine the optimization stability of short-horizon training with the long-term benefits of longer rollouts by assigning each training sample a horizon suited to its local dynamical properties. Its effectiveness is evaluated against fixed-horizon training and a randomized FTLE $\rightarrow$ horizon mapping. The latter is particularly important, as it distinguishes the benefit of meaningful state-dependent adaptation from the regularizing effect of merely exposing the model to multiple rollout lengths.
+Predictability, however, also varies along the attractor. We therefore hypothesize that the appropriate horizon depends on the local dynamics: states from which nearby trajectories diverge quickly, i.e. with a large FTLE, should be trained on shorter rollouts, and more predictable states on longer ones. The Lyapunov-mean method (Section~\ref{sec:lm}) combines both ideas by centering sample-wise horizons on a Lyapunov-time-based base horizon and assigning them by the local FTLE. A randomized variant (Section~\ref{sec:lmr}) separates the benefit of this state-dependent assignment from the regularizing effect of merely exposing the model to several rollout lengths.
 
 \newpage
 
@@ -274,12 +248,19 @@ This approach is still not ideal, as it is hard to distinguish whether the valid
 \subsubsection{Lyapunov-Mean Horizon}
 \label{sec:lm}
 
-To incorporate the information about local system instability into the training, we introduce the idea of a \textbf{Lyapunov-mean (LM)} horizon. In this setting, each training sample is assigned its own prediction horizon from a narrow range around the base horizon $T_{\mathrm{base}}$ defined in Eq.~\eqref{eq:t-base}, with $\gamma = 0.45$ and $T_{\max} = 10$. The sample-wise horizons are restricted to the range
+To incorporate the information about local system instability into the training, we introduce the \textbf{Lyapunov-mean (LM)} horizon, which assigns each training sample its own prediction horizon from a narrow range around a base horizon (see Section~\ref{sec:lm-idea} for the motivation).
 
+\paragraph{Base horizon.} The base horizon is a fraction of the Lyapunov time, expressed in model steps:
+\begin{equation} \label{eq:t-base}
+T_{\mathrm{base}} = \mathrm{clip}\left( \mathrm{round}\left( \frac{\gamma}{\hat\lambda_{\max}\,\Delta t} \right),\, 1,\, T_{\max} \right).
+\end{equation}
+Here, $\hat\lambda_{\max}$ is the estimate of the MLE, computed as the mean leading LLE along the training split, $\Delta t$ is the model timestep, $T_{\max} = 10$ is the largest horizon used in training, and $\gamma$, called the \emph{Lyapunov fraction}, is the fraction of the Lyapunov time up to which predictions are assumed to remain reliable. We use $\gamma = 0.45$. If $\hat\lambda_{\max} \le 0$, we set $T_{\mathrm{base}} = T_{\max}$.
+
+\paragraph{Horizon range.} The sample-wise horizons are restricted to
 \[
 T_{\mathrm{lo}} = \max(1,\, T_{\mathrm{base}} - v), \qquad T_{\mathrm{hi}} = \min(T_{\mathrm{base}} + v,\, T_{\max}),
 \]
-with spread $v = 1$ (see Section~\ref{sec:lm-idea}).
+with spread $v = 1$, so that they lie between $T_{\mathrm{base}} - 1$ and $T_{\mathrm{base}} + 1$.
 
 \paragraph{FTLE-based assignment.} For every state $\mathbf{x}_m$ of the training split, we compute the largest forward finite-time Lyapunov exponent over a window of $T_{\mathrm{base}}$ steps:
 
