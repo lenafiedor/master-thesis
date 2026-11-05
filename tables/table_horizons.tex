@@ -1,6 +1,14 @@
 \begin{table}[t]
   \centering
-  \caption{Training horizons chosen by the FTLE-based Lyapunov-mean approach and by cross-validation of the fixed models. $\hat\lambda$: largest Lyapunov exponent estimated by LM from the training trajectory; $\gamma/(\hat\lambda\Delta t)$: unclipped base horizon ($\gamma=0.45$); $T_{\mathrm{base}}$: base horizon after clipping to $[1, 10]$; $T^*$: cross-validated fixed horizon after 20 and 200 training epochs, given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$. Lyapunov times: $\hat\lambda \Delta t \, T$ for $T_{\mathrm{base}}$ and $T^*_{\mathrm{all}}$. $\Delta E_{200}$: excess pooled median MSE of a fixed 200-epoch model trained at $T_{\mathrm{base}}$ relative to $T^*_{\mathrm{all}}$.}
+  \caption{Training horizons chosen by the FTLE-based Lyapunov-mean approach and
+  by cross-validation of the fixed models. $\hat\lambda_{\max}$: maximal Lyapunov
+  exponent estimated by LM from the training trajectory; $\gamma/(\hat\lambda_{\max}\Delta t)$:
+  unclipped base horizon ($\gamma=0.45$); $T_{\mathrm{base}}$: base horizon after
+  clipping to $[1, 10]$; $T^*$: cross-validated fixed horizon after 20 and 200
+  training epochs, given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$. Lyapunov
+  times: $\hat\lambda_{\max} \Delta t \, T$ for $T_{\mathrm{base}}$ and $T^*_{\mathrm{all}}$.
+  $\Delta E_{200}$: excess pooled median MSE of a fixed 200-epoch model trained at
+  $T_{\mathrm{base}}$ relative to $T^*_{\mathrm{all}}$.}
   \label{tab:horizons}
   \small
   \setlength{\tabcolsep}{4pt}
@@ -8,7 +16,8 @@
     \toprule
     & & & & & \multicolumn{2}{c}{$T^*$ (steps)} & \multicolumn{2}{c}{Lyapunov times} & \\
     \cmidrule(lr){6-7}\cmidrule(lr){8-9}
-    System & $\Delta t$ & $\hat\lambda$ & $\gamma/(\hat\lambda\Delta t)$ & $T_{\mathrm{base}}$ & 20 ep & 200 ep & $T_{\mathrm{base}}$ & $T^*_{\mathrm{all}}$ (200 ep) & $\Delta E_{200}$ \\
+    System & $\Delta t$ & $\hat\lambda_{\max}$ & $\gamma/(\hat\lambda_{\max}\Delta t)$ & $T_{\mathrm{base}}$
+ & 20 ep & 200 ep & $T_{\mathrm{base}}$ & $T^*_{\mathrm{all}}$ (200 ep) & $\Delta E_{200}$ \\
     \midrule
     Lorenz-63 & 0.05 & 0.904 & 10.0 & 10 & 8/7 & 4/8 & 0.45 & 0.36 & +6.8\% \\
      & 0.08 & 0.904 & 6.2 & 6 & 2/5 & 2/6 & 0.43 & 0.43 & +0.0\% \\
