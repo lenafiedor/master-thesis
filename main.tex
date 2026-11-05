@@ -184,6 +184,12 @@ The use of an MLP is motivated by the structure of the forecasting problem. The 
 
 Existing work on dynamical system forecasting focuses mainly on one-step predictions. Following the existing literature on temporal horizons \cite{aceituno_temporal_2025} and as shown in later results, we argue that single-step predictions are not an optimal choice and can be replaced with longer forecasts. However, it has been shown that in chaotic systems the number of local minima in the loss landscape, called loss roughness, grows exponentially with regard to $T$ \cite{aceituno_temporal_2025}, making the problem computationally demanding.
 
+A direct measure of this effect is the gradient scaling ratio \cite{aceituno_temporal_2025}
+\begin{equation} \label{eq:g-t}
+g(T) = \frac{\left\| \nabla_{\theta} \mathcal{L}(\theta, T) \right\|}{\left\| \nabla_{\theta} \mathcal{L}(\theta, 1) \right\|},
+\end{equation}
+where $\mathcal{L}(\theta, T)$ is the MSE averaged over a $T$-step autoregressive rollout, i.e. the fixed-horizon training loss, and $\theta$ are the model parameters. The gradient of a $T$-step rollout contains products of up to $T$ Jacobians of the learned one-step map. Once the model reproduces the divergence of nearby trajectories, these products, and with them $g(T)$, can grow exponentially with $T$.
+
 In this paper, we report two evaluation scopes: the one-step error ($T_{\mathrm{val}}=1$), which follows the conventions in the existing literature, and the error pooled over the validation horizons $T_{\mathrm{val}} = 1, \dots, 10$, which measures multi-step rollout quality. Although both choices are somewhat arbitrary, they enable meaningful benchmarking. We are aware that a given metric choice will not necessarily globally produce the best results. However, it is not our main objective to design a model that will achieve state-of-the-art performance on the benchmark chaotic dynamical systems; rather, given an arbitrary set of assumptions and hyperparameters or a limited amount of computational resources, we want to show the superiority of the adaptive approach over fixed-horizon models.
 
 \subsection{Related Work}
@@ -387,6 +393,26 @@ multi-step predictability, it is always at least as long as the one-step optimum
 \paragraph{Horizons selected by CV.}
 \input{tables/table_cv}
 Table~\ref{tab:cv-horizons} summarizes the horizons selected online by CV. On Lorenz-63 and Rössler, the curriculum ends after 50--99 epochs, leaving roughly 100--150 epochs of training at the selected horizon. Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$ and usually longer: 10, 8 and 7.5 steps (median) for Lorenz-63 versus $T^*_{\mathrm{all}} = 8, 6, 6$, and 10 steps for Rössler, matching the boundary optimum. This bias is expected from the design of the method: the candidate for a longer horizon has been trained for more epochs in total, so its validation score also reflects the extra training time and not only the horizon (see Section~\ref{sec:cv}). On Lorenz-96, the selected horizons (7--9) are not meaningful because the models never leave their initial error level during the curriculum (see Section~\ref{sec:results-lorenz96}).
+
+\subsection{Gradient Scaling}
+\label{sec:gradient-scaling}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/gradient_scaling.pdf}
+  \caption{Gradient scaling ratio $g(T)$ (Eq.~\eqref{eq:g-t}) as a function of the loss horizon $T$, for every system and timestep (log scale, shared within a row). Lines show the median over 20 seeds, shaded areas the 95\% seed-bootstrap confidence interval. Fixed-horizon models (dashed) are trained for 200 epochs at $T = 1$, at the cross-validated horizon $T^*_{\mathrm{all}}$ and at $T = 10$; LM is trained for 200 epochs; untrained models use the same architecture and seeds. $g(T)$ is evaluated at the final parameters on 50 batches of the validation split.}
+  \label{fig:gradient-scaling}
+\end{figure}
+
+To relate the horizon results to the optimization landscape, we computed $g(T)$ for $T = 1, \dots, 10$ for all 200-epoch fixed-horizon models, for LM, and for untrained models with the same seeds (Figure~\ref{fig:gradient-scaling}). The ratio is evaluated at the final parameters on 50 batches of the validation split, and we report the median over 20 seeds.
+
+\paragraph{Training creates the gradient amplification.} For untrained models, $g(T)$ stays between 0.5 and 0.8 for all horizons and systems. After training, it grows strongly with $T$. For models trained at $T = 1$, $g(10)$ is 99--438 on Lorenz-63, 8--10 on Lorenz-96 and 40--79 on Rössler, and it increases with $\Delta t$ on Lorenz-63 and Rössler. The amplification therefore appears only once the model has learned the divergence of the dynamics, which is when long-horizon losses become hard to optimize.
+
+\paragraph{Long training horizons damp it.} Training at longer horizons reduces $g(T)$ on Lorenz-63 and Lorenz-96. At $T = 10$, $g(10)$ falls to 34--85 on Lorenz-63 and to 1.7--8.8 on Lorenz-96, where the curve flattens almost completely at $\Delta t = 0.08$ and $0.1$. The effect is not monotone in the training horizon, however: on both systems, the largest values of $g(10)$ occur for training horizons of 2--4 steps (e.g. 408 at $T = 2$ on Lorenz-63 with $\Delta t = 0.08$), not for $T = 1$. On Rössler, $g(10)$ decreases with the training horizon only at $\Delta t = 0.08$ and $0.1$ and is nearly constant at $\Delta t = 0.05$.
+
+\paragraph{LM behaves like the fixed-horizon optimum.} The $g(T)$ curves of LM almost coincide with those of the fixed-horizon model at $T^*_{\mathrm{all}}$ on Lorenz-96 and Rössler, and they differ by at most a factor of about two on Lorenz-63. Training on a mixture of horizons around $T_{\mathrm{base}}$ thus leads to a loss landscape similar to that of training at a single horizon of similar length.
+
+Since $g(T)$ is measured at the final parameters, it characterizes the landscape around the solution found, not the difficulty along the training trajectory. Still, the results are consistent with the observation that long-horizon training needs more epochs to pay off (Section~\ref{sec:general-observations}): the longer the training horizon, the more of the amplification the model has to learn to control.
 
 \subsection{Lorenz-63}
 \label{sec:results-lorenz63}
