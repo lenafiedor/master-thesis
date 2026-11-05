@@ -162,15 +162,15 @@ LLEs are not a good approximation for assigning a forecast horizon to an individ
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\textwidth]{figs/lorenz_lle_heatmap.png}
-    \caption{Lorenz-63 attractor with heatmaps of the local Lyapunov exponents.}
+    \includegraphics[width=\textwidth]{figs/lorenz_lle_heatmap.pdf}
+    \caption{Lorenz-63 attractor colored by the local Lyapunov exponents $\lambda^{\mathrm{loc}}_1$, $\lambda^{\mathrm{loc}}_2$ and $\lambda^{\mathrm{loc}}_3$, computed with $\Delta t = 0.01$ along a trajectory of 50\,000 steps. For $\lambda^{\mathrm{loc}}_1$ and $\lambda^{\mathrm{loc}}_2$, the color scale is centered at zero (blue: local contraction, red: local expansion); $\lambda^{\mathrm{loc}}_3$ is negative everywhere and is colored relative to its own range. Color limits are the 1st and 99th percentiles.}
     \label{fig:lorenz-lle-heatmap}
 \end{figure}
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\textwidth]{figs/lorenz_lle_histogram.png}
-    \caption{Histograms of the local Lyapunov exponents along the Lorenz-63 attractor for the standard parameters $(\sigma, \rho, \beta) = (10, 28, \frac{8}{3})$. The mean of the leading LLE distribution is close to the literature value of MLE, $\lambda_{\max} = 0.9056$ \cite{geurts_lyapunov_2020}. Obtained distributions are also consistent with those reported by \cite{ayers_supervised_2023}.}
+    \includegraphics[width=\textwidth]{figs/lorenz_lle_histogram.pdf}
+    \caption{Histograms of the local Lyapunov exponents along the Lorenz-63 attractor for the standard parameters $(\sigma, \rho, \beta) = (10, 28, \frac{8}{3})$, computed as in Figure~\ref{fig:lorenz-lle-heatmap} (log-scaled density; red line: mean). The mean of the leading exponent, 0.899, is close to the literature value of the MLE, $\lambda_{\max} = 0.9056$ \cite{geurts_lyapunov_2020}. Obtained distributions are also consistent with those reported by \cite{ayers_supervised_2023}.}
     \label{fig:lorenz-lle-histogram}
 \end{figure}
 
@@ -234,15 +234,15 @@ Initially, we train a set of neural networks to approximate the dynamical system
 
 For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and rollout the simulation up to $T_{\max} = 10$ steps in the future, summing up to physical times $\tau = 0.50, 0.80, 1.0$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the autoregressive rollout.
 
-In order to reproduce Figure~5 of \cite{aceituno_temporal_2025}, we trained 20 MLPs with fixed seeds: (1) for 20 epochs and (2) for 200 epochs; with each training horizon $T \in \{1, \dots, 10\}$ and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:mse-fixed}). Note that at this stage the results already differ slightly from the original paper, as we were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.0$. The Mean Squared Error (MSE) obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
+In order to reproduce Figure~5 of \cite{aceituno_temporal_2025}, we trained 20 MLPs with fixed seeds: (1) for 20 epochs and (2) for 200 epochs; with each training horizon $T \in \{1, \dots, 10\}$ and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). Note that at this stage the results already differ slightly from the original paper, as we were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.0$. The Mean Squared Error (MSE) obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
 
 Based on cross-validation performance, we report two horizon values for which the median MSE was minimal: (1) across all $T_{\mathrm{val}}$, and (2) when validated only at $T_{\mathrm{val}} = 1$. From now on, this is our baseline for comparison with the adaptive horizon models.
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\textwidth]{figs/mse_dt_08_fixed_200.png}
-    \caption{Exemplary cross-validation curves of fixed-horizon models trained on Lorenz-63 with $\Delta t = 0.08$ for 200 epochs. The training horizon $T$ is shown on the x-axis and the average of the minimum validation MSE on the y-axis. Each line corresponds to one validation horizon $T_{\mathrm{val}}$.}
-    \label{fig:mse-fixed}
+    \includegraphics[width=\textwidth]{figs/validation_curves.pdf}
+    \caption{Cross-validation curves of fixed-horizon models trained for 200 epochs, for every system (rows) and timestep (columns). The x-axis shows the training horizon $T$ and the y-axis the median validation MSE over 20 seeds (normalized coordinates, log scale; the y-axis is shared within a row). Each line corresponds to one validation horizon $T_{\mathrm{val}}$, with the error averaged over the first $T_{\mathrm{val}}$ rollout steps; the enlarged marker on each line indicates the training horizon with the lowest error for that $T_{\mathrm{val}}$.}
+    \label{fig:validation-curves}
 \end{figure}
 
 \subsection{Budget-Based Approach}
@@ -256,12 +256,12 @@ We argue that to find the optimal performance-learnability trade-off described i
 
 First, we try a naive approach to finding the optimal horizon by setting up a \textbf{linear scheduler (LS)}, which starts at $T=1$ and increases $T$ by one every 20 epochs up to $T_{\max} = 10$. Similarly to the fixed-horizon setup, we trained 20 adaptive models for each system and $\Delta t$ for 200 epochs. The total number of epochs equals that of the full 20-epoch fixed-horizon sweep ($10 \times 20$ epochs vs. 200 epochs); in the results, LS is compared with fixed-horizon models trained for the same 200 epochs. The optimizer state is kept across changes of $T$.
 
-In this case, as expected from \cite{aceituno_temporal_2025}, the validation error of LS models is often much larger than that of the fixed-horizon optimum, since the choice of $T_{\max} = 10$ is very arbitrary and does not reflect the system's uncertainty in any way, and the model spends the last stages of training at the longest horizons. As can be observed in Figure~\ref{fig:mse-fixed}, system's predictability depends directly on the Lyapunov time; for example, in Lorenz-63 and Lorenz-96, $\tau = 0.80$ is already too long a rollout, so training with this horizon degrades the model. Meanwhile, the Rössler system can be effectively trained with $\tau = 0.80$, making LS models perform considerably well.
+In this case, as expected from \cite{aceituno_temporal_2025}, the validation error of LS models is often much larger than that of the fixed-horizon optimum, since the choice of $T_{\max} = 10$ is very arbitrary and does not reflect the system's uncertainty in any way, and the model spends the last stages of training at the longest horizons. As can be observed in Figure~\ref{fig:validation-curves}, system's predictability depends directly on the Lyapunov time; for example, in Lorenz-63 and Lorenz-96, $\tau = 0.80$ is already too long a rollout, so training with this horizon degrades the model. Meanwhile, the Rössler system can be effectively trained with $\tau = 0.80$, making LS models perform considerably well.
 
 \subsubsection{Cross-Validation Minimum Search}
 \label{sec:cv}
 
-For the aforementioned reasons, the conclusion was drawn that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes, ideally at the "minimum" of the cross-validation curve (see Figure~\ref{fig:mse-fixed}). Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other (see \cite{aceituno_temporal_2025}).
+For the aforementioned reasons, the conclusion was drawn that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes, ideally at the "minimum" of the cross-validation curve (see Figure~\ref{fig:validation-curves}). Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other (see \cite{aceituno_temporal_2025}).
 
 Therefore, we decided to introduce the \textbf{cross-validation (CV)} method, which consists of a curriculum phase followed by a training phase at the selected horizon.
 
