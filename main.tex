@@ -445,6 +445,9 @@ Under an equal rollout-step budget, LM reduces the error over all validation hor
 
 In the Rössler system, no adaptive method improves on the fixed-horizon optimum (Table~\ref{tab:results-rossler}). The budget-matched LM is within 4\% of the 20-epoch optimum at $\Delta t = 0.05$ and is 7--14\% worse at the larger timesteps (significant at $\Delta t = 0.08$). After 200 epochs, LM is 3--4\% worse than the fixed-horizon optimum over all validation horizons. As on Lorenz-96, the permuted horizons are slightly better than the FTLE-based ones (LMR/LM 0.93--1.00, significant at $\Delta t = 0.05$ and $0.1$). For this system, however, the comparison is weak: with $T_{\mathrm{base}}$ clipped to the upper bound, both variants train almost exclusively at $T\in\{9,10\}$, so the assignment has little room to matter. LS diverges at $\Delta t = 0.05$ (23 times the reference error) and is within 4\% of the fixed-horizon optimum otherwise. CV behaves the same way: at $\Delta t = 0.05$, 16 of 20 seeds remain stuck at a smoothed validation MSE of about 0.19 throughout the curriculum, which yields 19 times the reference error. At $\Delta t = 0.08$ and $0.1$, CV is within 3--4\% of the fixed-horizon optimum in both scopes, although it wins on only 2--8 seeds; it selects $T = 10$ in the median, in agreement with $T^*_{\mathrm{all}}$.
 
+\paragraph{Problem complexity.}
+TODO: Rossler too easy, add a section about the simplified model.
+
 \subsection{Lorenz-96}
 \label{sec:results-lorenz96}
 
