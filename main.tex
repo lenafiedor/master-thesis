@@ -163,7 +163,7 @@ LLEs are not a good approximation for assigning a forecast horizon to an individ
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/lorenz_lle_heatmap.pdf}
-    \caption{Lorenz-63 attractor colored by the local Lyapunov exponents $\lambda^{\mathrm{loc}}_1$, $\lambda^{\mathrm{loc}}_2$ and $\lambda^{\mathrm{loc}}_3$, computed with $\Delta t = 0.01$ along a trajectory of 50\,000 steps. For $\lambda^{\mathrm{loc}}_1$ and $\lambda^{\mathrm{loc}}_2$, the color scale is centered at zero (blue: local contraction, red: local expansion); $\lambda^{\mathrm{loc}}_3$ is negative everywhere and is colored relative to its own range. Color limits are the 1st and 99th percentiles.}
+    \caption{Lorenz-63 attractor colored by the local Lyapunov exponents $\lambda^{\mathrm{loc}}_1$, $\lambda^{\mathrm{loc}}_2$ and $\lambda^{\mathrm{loc}}_3$, computed with $\Delta t = 0.01$ along a trajectory of 50\,000 steps. For $\lambda^{\mathrm{loc}}_1$ and $\lambda^{\mathrm{loc}}_2$, the color scale is centered at zero (blue: local contraction, red: local expansion); $\lambda^{\mathrm{loc}}_3$ is negative everywhere.}
     \label{fig:lorenz-lle-heatmap}
 \end{figure}
 
@@ -451,6 +451,11 @@ In the Rössler system, no adaptive method improves on the fixed-horizon optimum
 \input{tables/table_lorenz96}
 
 Lorenz-96 gives the clearest result for the budget-matched LM: it improves on the best 20-epoch fixed-horizon model at every timestep and in both scopes. The gain is 11--22\% over all validation horizons (18--20 of 20 seeds, $p<0.01$) and 5--11\% at $T_{\mathrm{val}}=1$ (Table~\ref{tab:results-lorenz96}). At equal training length (200 epochs), LM is consistently but only slightly worse than the oracle fixed horizon (3--10\% over all validation horizons, significant at every timestep). The FTLE ablation shows no benefit of the FTLE-based assignment: LMR is 3--6\% \emph{better} than LM over all validation horizons (significant at all three timesteps) and indistinguishable at $T_{\mathrm{val}}=1$. LS fails on this system, with 2.3--4.7 times the error of the fixed-horizon optimum and no winning seed. CV fails in the same way (2.2--4.6 times the reference error, no winning seed). For every seed, the smoothed validation MSE stays at 0.50--0.65 during the whole curriculum, so every stage ends after the minimum of five to seven epochs and the curriculum is complete after 50--52 epochs. The selected horizons (7--9 steps) are therefore not informative. The confidence intervals of LS and CV have almost zero width, i.e. all seeds converge to practically the same poor solution.
+
+\subsection{Long-Horizon Forecasts}
+\label{sec:long-horizon}
+
+% TODO: VPT figure and results (100-step evaluation).
 
 \subsection{Summary Across Systems}
 \label{sec:summary}
