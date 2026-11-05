@@ -357,6 +357,8 @@ We ran a set of experiments on each dynamical system:
 
 All models were evaluated on the validation split on the same set of horizon values $T_{\mathrm{val}} \in \{1, \dots,10\}$ that was used for training. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. As a performance measure we report the median across 20 seeds: (1) of the one-step MSE ($T_{\mathrm{val}} = 1$) and (2) pooled over all validation horizons $T_{\mathrm{val}}=1,\dots,10$. Each yields a single value per method, enabling a straightforward comparison.
 
+Two further error measures are reported in Appendix~\ref{app:metrics}: the normalized root-mean-square error (NRMSE), i.e. the per-sample RMSE in normalized coordinates, so that each coordinate is scaled by its standard deviation over the attractor, and the symmetric mean absolute percentage error (SMAPE, 0--200\%) in physical coordinates, as used by \cite{zhuang_horizon_2025}. To assess forecasts beyond the training window, Section~\ref{sec:long-horizon} additionally uses the valid prediction time (VPT): the number of steps before the NRMSE of a rollout first exceeds a threshold $\epsilon$, expressed in Lyapunov times as $\mathrm{VPT} \cdot \Delta t \cdot \lambda_{\max}$.
+
 For every scope, the reference baseline is the fixed-horizon model whose training horizon $T^*$ achieves the lowest median validation MSE among $T \in \{1,\dots,10\}$. $T^*$ is selected separately for each scope and each training regime.
 
 Adaptive models trained for 200 epochs (LM, LMR, LS, CV) are compared with fixed-horizon models trained for 200 epochs. Budget-based LM models are compared with fixed-horizon models trained for 20 epochs. Each table reports the median MSE, pooled over seeds and validation horizons in scope, with a 95\% percentile-bootstrap confidence interval obtained by resampling seeds; the ratio of the medians to the reference (values below 1 favor the method); and the number of seeds on which the method beats the reference, comparing per-seed medians over the scope. Significance is assessed with a two-sided exact sign test over the 20 seeds. The $p$-values are Holm-corrected within each system, timestep and scope, i.e. over the six comparisons in one block of a table (budget-based LM, LM, LMR, LS, CV and LMR vs.\ LM).
@@ -482,6 +484,18 @@ Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the 
 
 \clearpage
 \appendix
+
+\section{Additional Error Metrics}
+\label{app:metrics}
+
+\input{tables/table_nrmse}
+\input{tables/table_smape}
+
+Tables~\ref{tab:nrmse} and~\ref{tab:smape} repeat the pooled comparison of Section~\ref{sec:summary} with NRMSE and SMAPE instead of MSE. The fixed-horizon references are kept at the MSE-selected $T^*_{\mathrm{all}}$, so the tables test whether the conclusions depend on the error measure, not whether another horizon would be optimal for it.
+
+The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum and better than it on Lorenz-63 at $\Delta t = 0.1$, and the collapse of LS and CV on Lorenz-96 and on Rössler at $\Delta t = 0.05$ is equally visible.
+
+SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. The differences are below 0.5 percentage points. SMAPE is large for Lorenz-96 and Rössler (31--92\%) because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
 
 \section{Methods Description}
 \label{app:method-description}
