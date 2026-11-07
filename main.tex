@@ -15,17 +15,21 @@
 
 \section{Abstract}
 
-Forecasting chaotic dynamical systems is challenging because small differences in initial conditions can grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the prediction horizon is therefore a central design choice: short horizons may lead to accurate but limited predictions, while long horizon predictions can be dominated by divergence and accumulated error. There exists a gap in the literature as most forecasting set-ups use fixed prediction horizons, even though the predictability of chaotic trajectories may vary across different regions of the state space.
+Forecasting chaotic dynamical systems is challenging because small differences in initial conditions can grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the prediction horizon is therefore a central design choice: short horizons may lead to accurate but limited predictions, while long horizon predictions can be dominated by divergence and accumulated error. There exists a gap in the literature, as most forecasting set-ups use fixed prediction horizons, even though the optimal prediction time is specific to the considered dynamical system and depends on its divergence rate. Furthermore, predictability of chaotic trajectories may vary across different regions of the state space and should also be considered when constructing training samples.
 
-We investigate the adaptive temporal horizon for neural forecasting of chaotic dynamical systems. Instead of training only with a fixed prediction time, we let the horizon vary during training:
-\begin{enumerate}
-    \item Using a simple linear scheduler (LS),
-    \item Performing an online cross-validation over a horizon curriculum (CV),
-    \item Mapping from the local predictability properties of the trajectory, measured by finite-time Lyapunov exponents (LM), together with a randomized ablation (LMR).
-\end{enumerate}
-The methods are evaluated on the Lorenz-63, Lorenz-96 and Rössler systems and compared against fixed-horizon baselines, both at an equal number of training epochs and, for LM, at an equal rollout-step budget matching a full grid search over fixed horizons. The evaluation considers the one-step prediction error ($T_{\mathrm{val}} = 1$) as well as the error pooled over validation horizons $T_{\mathrm{val}} = 1, \dots, 10$.
+We investigate the adaptive temporal horizon for neural forecasting of chaotic dynamical systems. Instead of training only with a fixed prediction time, we calculate the optimal prediction horizon using the maximal Lyapunov exponent of the system and further adjust it on the sample level based on the local instability rate.
 
-Our results show that the horizon choice has a significant effect on forecasting performance. A single LM model trained with the budget of a fixed-horizon grid search matches or outperforms the best model of that search on Lorenz-63 and Lorenz-96, but not on Rössler, while curriculum-based methods (LS, CV) are unreliable and can collapse. Most of the benefit of LM comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise FTLE assignment. Overall, we demonstrate that treating the prediction horizon as an adaptive component, rather than a fixed experimental parameter, is a promising direction for improving neural forecasting in chaotic dynamical systems.
+We argue that with limited amount of computational resources it is better to use our adaptive method than to perform a grid search on the horizon parameter in order to find the optimum. The methods are evaluated on the Lorenz-63, Lorenz-96, and Rössler systems and compared against fixed-horizon baselines.
+
+% \begin{enumerate}
+%     \item Using a simple linear scheduler (LS),
+%     \item Performing an online cross-validation over a horizon curriculum (CV),
+%     \item Mapping from the local predictability properties of the trajectory, measured by finite-time Lyapunov exponents (LM), together with a randomized ablation (LMR).
+% \end{enumerate}
+
+Our results show that the adaptive horizon method outperforms the fixed grid search under the same computational budget, or when the problem considered poses a forecasting difficulty (?). This difference shrinks when we compare locally the best fixed model with the adaptive model, both trained under the same budget. Most of the benefit of our adaptive method comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise horizon assignment.
+
+Overall, we demonstrate that treating the prediction horizon as an adaptive component, rather than a fixed experimental parameter, is a promising direction for improving neural forecasting in chaotic dynamical systems.
 
 \newpage
 
@@ -36,23 +40,17 @@ Our results show that the horizon choice has a significant effect on forecasting
 
 \subsection{Motivation}
 
-Many systems in science and engineering evolve according to deterministic laws, yet their long-term behavior can be extremely difficult to predict. Chaotic dynamical systems are a central example of this tension: even when the governing equations are known, small differences in initial conditions can grow rapidly and lead to diverging trajectories. This makes forecasting such systems a useful test case for studying the limits of data-driven prediction.
+Many systems in science and engineering evolve according to deterministic laws, yet their long-term behavior can be extremely difficult to predict. Chaotic dynamical systems are a central example of this tension: even when the governing equations are known, small differences in initial conditions can grow rapidly and lead to diverging trajectories. The difficulty of the prediction strongly depends on the temporal horizon. Short-term predictions may remain close to the true trajectory, whereas longer-term predictions accumulate errors and eventually become unreliable \cite{aceituno_temporal_2025}. Optimal prediction horizon depends on the uncertainty rate of the system, as well as model parameters, e.g. chosen timestep. The global horizon may also not reflect how predictability varies across different regions of the state space.
 
-In trajectory forecasting, the difficulty of the prediction strongly depends on the temporal horizon. Short-term predictions may remain close to the true trajectory, whereas longer-term predictions accumulate errors and eventually become unreliable \cite{aceituno_temporal_2025}. When finding an optimal fixed prediction horizon, one needs some ground truth about the model, as it depends on the local dynamics of the system as well as model parameters, e.g. chosen timestep. The fixed horizon may also not reflect how predictability varies across different regions of the state space.
-
-This paper investigates the adaptive temporal horizon as a solution to the performance-learnability trade-off \cite{aceituno_temporal_2025}. We argue that instead of performing a computationally expensive grid search for an optimal fixed temporal horizon parameter, this process can be automatized by training the model with variable horizon and taking into account the local predictability of the system.
+This paper investigates the adaptive temporal horizon as a solution to the problems mentioned above. We argue that instead of performing a computationally expensive grid search for an optimal horizon parameter, this process can be automatized by training the model with variable horizon and taking into account the local predictability of the system.
 
 \subsection{Problem Statement}
 
-A common approach in data-driven trajectory forecasting is to train and evaluate models at a prediction horizon of one step \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Although this approach provides a clear and comparable learning objective, it also assumes that the arbitrarily chosen horizon parameter is able to capture well the local dynamics; moreover, it assumes that the same temporal distance is equally appropriate throughout the trajectory. This assumption is restrictive for chaotic dynamical systems, where local rates of divergence can vary substantially over the state space, They may also not be of monotonic nature, meaning that chosen horizon parameter $k$ does not capture well the behavior of errors of some other periodicity, for example $\frac{k+1}{2}$ \cite{zhuang_horizon_2025}. As a result, some regions may remain predictable over relatively long horizons, while others may become unreliable much sooner.
+Forecasting models are usually trained on one step predictions \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Although this approach provides a clear learning objective, it also assumes that the arbitrarily chosen horizon parameter is able to capture well the local dynamics and is equally appropriate throughout the trajectory. This assumption is restrictive for chaotic dynamical systems, where local rates of divergence can vary substantially over the state space. They may also not have a fixed periodicity, meaning that the arbitrarily chosen horizon $k$ does not capture well the behavior of errors of some other periodicity, for example $\frac{k+1}{2}$ \cite{zhuang_horizon_2025}. As a result, some regions may remain predictable over relatively long horizons, while others may become unreliable much sooner.
 
 Finding an optimal prediction horizon is a computationally demanding task. Treating the horizon optimization problem as a function of computational resources, we propose replacing the grid search for the horizon parameter with one adaptive model.
 
-Furthermore, we raise the question of whether adapting the prediction horizon to the local dynamics of the system can provide a suitable training signal for neural forecasting models. We extend our model by mapping the local predictability of the trajectory, measured by finite-time Lyapunov exponents (FTLEs), to the temporal horizon.
-
-\subsection{Aim and Research Questions}
-
-We investigate whether adaptive temporal horizons can improve neural forecasting of chaotic dynamical systems compared with fixed-horizon training using the same amount of computational resources. Furthermore, we employ the local predictability score of the system to guide the horizon choice.
+Furthermore, we ask whether adapting the prediction horizon to the local dynamics of the system can provide a suitable training signal for neural forecasting models. We extend our theory by mapping the local predictability of the trajectory, measured in finite-time Lyapunov exponents (FTLEs), to the temporal horizon.
 
 \subsection{Contributions}
 
@@ -60,9 +58,8 @@ The main contributions of this paper are as follows.
 
 \begin{enumerate}
     \item A formulation of adaptive temporal horizon selection for neural forecasting of chaotic dynamical systems.
-    \item An implementation of a training framework for adaptive horizon neural forecasting models: a linear scheduler, an online cross-validation, a Lyapunov-mean horizon with its randomized ablation, and an FTLE-weighted loss (see Appendix~\ref{app:weighted-loss}).
+    \item An implementation of four different training framework for adaptive horizon neural forecasting models: a linear scheduler, an online cross-validation, a Lyapunov-mean horizon, and an FTLE-weighted loss (see Appendix~\ref{app:weighted-loss}).
     \item An empirical evaluation on benchmark chaotic systems, including the Lorenz-63, Lorenz-96 and Rössler systems.
-    \item Comparison of forecasting performance across horizons showing how adaptive horizon selection affects prediction accuracy and robustness compared to the fixed-horizon baseline.
 \end{enumerate}
 
 \newpage
@@ -71,7 +68,7 @@ The main contributions of this paper are as follows.
 
 \subsection{Dynamical Systems and Chaotic Behavior}
 
-Dynamical system is a description of how a system evolves over time. There exist two types of them: differential equations and iterated maps. The former describe system evolution in continuous time, while the latter arise in problems where time is discrete \cite{strogatz_nonlinear_1994}. This paper focuses on differential equations.
+The field of dynamical systems studies how systems evolve over time. There exist two types of them: differential equations and iterated maps. The former describe system evolution in continuous time, while the latter arise in problems where time is discrete \cite{strogatz_nonlinear_1994}. This paper focuses on differential equations.
 
 The following formula provides a general framework for describing differential equations.
 
@@ -446,7 +443,7 @@ Under an equal rollout-step budget, LM reduces the error over all validation hor
 In the Rössler system, no adaptive method improves on the fixed-horizon optimum (Table~\ref{tab:results-rossler}). The budget-matched LM is within 4\% of the 20-epoch optimum at $\Delta t = 0.05$ and is 7--14\% worse at the larger timesteps (significant at $\Delta t = 0.08$). After 200 epochs, LM is 3--4\% worse than the fixed-horizon optimum over all validation horizons. As on Lorenz-96, the permuted horizons are slightly better than the FTLE-based ones (LMR/LM 0.93--1.00, significant at $\Delta t = 0.05$ and $0.1$). For this system, however, the comparison is weak: with $T_{\mathrm{base}}$ clipped to the upper bound, both variants train almost exclusively at $T\in\{9,10\}$, so the assignment has little room to matter. LS diverges at $\Delta t = 0.05$ (23 times the reference error) and is within 4\% of the fixed-horizon optimum otherwise. CV behaves the same way: at $\Delta t = 0.05$, 16 of 20 seeds remain stuck at a smoothed validation MSE of about 0.19 throughout the curriculum, which yields 19 times the reference error. At $\Delta t = 0.08$ and $0.1$, CV is within 3--4\% of the fixed-horizon optimum in both scopes, although it wins on only 2--8 seeds; it selects $T = 10$ in the median, in agreement with $T^*_{\mathrm{all}}$.
 
 \paragraph{Problem complexity.}
-TODO: Rossler too easy, add a section about the simplified model.
+% TODO: Rossler too easy, add a section about the simplified model.
 
 \subsection{Lorenz-96}
 \label{sec:results-lorenz96}
@@ -485,6 +482,11 @@ Lorenz-96 gives the clearest result for the budget-matched LM: it improves on th
 \end{figure}
 
 Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three tables for the two training regimes, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. The collapse of LS and CV is visible as curves that start up to an order of magnitude above the others and saturate at long validation horizons. Elsewhere, the curves of the adaptive methods stay close to the fixed-horizon optimum. The advantage of the budget-matched LM over the 20-epoch fixed-horizon models grows with $T_{\mathrm{val}}$ on Lorenz-63 and Lorenz-96, i.e. it comes mainly from more stable long rollouts. LM trained with the rollout budget of a fixed-horizon sweep matches or beats the best fixed-horizon model of that sweep on both systems with $\hat\lambda_{\max} \approx 1$, but not on Rössler. At equal training length, LM is within roughly 10\% of an oracle choice of the fixed horizon over all validation horizons in all systems. The two curriculum-based methods, LS and CV, are the least reliable: both collapse on Lorenz-96 and on Rössler at $\Delta t = 0.05$. Where CV trains successfully, it is close to the fixed-horizon optimum on Rössler but 14--21\% worse on Lorenz-63, and it systematically selects horizons longer than $T^*_{\mathrm{all}}$. Its online selection does not replace the grid search. Assigning horizons by the local FTLE gives a measurable advantage only on Lorenz-63 at short validation horizons. Elsewhere, randomly permuted horizons perform as well or slightly better. This indicates that most of LM's benefit comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
+
+\paragraph{In short (TODO).} Adaptive techniques show advantage over the fixed baseline when given approximation problem is constrained either by its complexity or limited amount of computation.
+
+\section{Conclusion}
+
 
 \clearpage
 \bibliographystyle{plain}
