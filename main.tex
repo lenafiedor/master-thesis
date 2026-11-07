@@ -455,7 +455,23 @@ Lorenz-96 gives the clearest result for the budget-matched LM: it improves on th
 \subsection{Long-Horizon Forecasts}
 \label{sec:long-horizon}
 
-% TODO: VPT figure and results (100-step evaluation).
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figs/vpt.pdf}
+  \caption{Valid prediction time (VPT) at the NRMSE threshold $\epsilon = 0.5$, in Lyapunov times, for the equal-budget comparison (left) and the comparison at 200 epochs (right). For each model, the VPT is averaged over all validation initial conditions; markers show the median over 20 seeds and bars the interquartile range. Rollouts are 100 steps long for Lorenz-63 and Lorenz-96 and 500 steps for Rössler; fewer than 2\% of the rollouts of any model remain below the threshold. Fixed-horizon models are shown at their MSE-selected horizon $T^*_{\mathrm{all}}$.}
+  \label{fig:vpt}
+\end{figure}
+
+All models are trained and selected on rollouts of at most ten steps. To test whether the differences persist beyond this window, every model was rolled out for 100 steps (500 for Rössler, whose slow divergence would otherwise leave most rollouts valid until the end) and its VPT was computed at $\epsilon = 0.5$ (Figure~\ref{fig:vpt}).
+
+\paragraph{Equal budget.}
+On Lorenz-63, the budget-matched LM forecasts for 1.47--1.62 Lyapunov times, 32--40\% longer than the best 20-epoch fixed-horizon model (1.11--1.16) and even longer than the best 200-epoch fixed-horizon model. On Lorenz-96 the gain is 15--18\% (0.59--0.63 vs.\ 0.50--0.54 Lyapunov times). On Rössler, LM and the fixed-horizon model are within 0.05 Lyapunov times of each other. This matches the MSE results: the advantage of LM under an equal budget grows with the forecast horizon on the two Lorenz systems and is absent on Rössler.
+
+\paragraph{Equal training length.}
+At 200 epochs, LM reaches a longer VPT than the MSE-selected fixed-horizon model on Lorenz-63 (1.54--1.68 vs.\ 1.41--1.54 Lyapunov times), although its pooled MSE over ten steps is slightly higher at $\Delta t = 0.05$ and $0.08$. The reason is that the VPT of fixed-horizon models keeps increasing with the training horizon beyond $T^*_{\mathrm{all}}$, up to 1.56--1.75 Lyapunov times at $T = 8$--$10$: the ten-step MSE favors shorter horizons than long-term stability does, and LM is close to the fixed horizon that is best for the latter. On Lorenz-96 and Rössler, LM, LMR and the fixed-horizon optimum agree within 0.05 Lyapunov times. The collapsed LS and CV models (Lorenz-96 and Rössler at $\Delta t = 0.05$) lose their forecast skill after 0.1--0.3 Lyapunov times.
+
+\paragraph{Long training horizons on Lorenz-96.}
+Lorenz-96 is the only system where long fixed training horizons hurt long-term forecasts. At $\Delta t = 0.08$ and $0.1$, the VPT peaks at $T = 3$--$6$ (0.59 Lyapunov times) and drops to 0.08--0.22 at $T = 10$, i.e. to the level of a one-step model. The models trained at these horizons are poor already within the training window (about 2.3 times the optimal pooled MSE, Figure~\ref{fig:fixed-horizon-curves}), which suggests that 200 epochs are not enough for long-horizon training on this system. LM, which trains on horizons around $T_{\mathrm{base}} = 4$--$5$, avoids this regime.
 
 \subsection{Summary Across Systems}
 \label{sec:summary}
