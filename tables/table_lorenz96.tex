@@ -3,7 +3,7 @@
   \caption{Lorenz-96: validation MSE ($\times 10^{-3}$, normalized coordinates) at the
   first validation step ($T_{\mathrm{val}}=1$) and pooled over all validation
   horizons ($T_{\mathrm{val}}=1,\dots,10$). MSE: median over 20 seeds (and
-  validation horizons), 95\% seed-bootstrap CI in brackets; bold: lowest median
+  validation horizons), $\pm$: standard deviation over seeds of the per-seed median; bold: lowest median
   within a training regime. Wins: seeds on which the method beats the fixed model
   with the cross-validated horizon $T^*$ of the same regime (last row: LMR vs.\ LM).
   \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, two-sided exact sign test,
@@ -19,41 +19,41 @@
     \midrule
     \multicolumn{5}{l}{$\Delta t = 0.05$} \\
     \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
-    \quad Fixed ($T^*=5/5$) & 16.7 {\scriptsize[16.0, 44.7]} & -- & 126 {\scriptsize[120, 133]} & -- \\
-    \quad LM (equal budget) & \textbf{14.8} {\scriptsize[14.1, 15.4]} & 19/20\textsuperscript{\textdaggerdbl} & \textbf{98.1} {\scriptsize[89.2, 106]} & 19/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=5/5$) & $16.7^{\pm 17.0}$ & -- & $126^{\pm 18.3}$ & -- \\
+    \quad LM (equal budget) & $\mathbf{14.8}^{\pm 3.25}$ & 19/20\textsuperscript{\textdaggerdbl} & $\mathbf{98.1}^{\pm 22.3}$ & 19/20\textsuperscript{\textdaggerdbl} \\
     \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
-    \quad Fixed ($T^*=6/7$) & \textbf{14.2} {\scriptsize[13.5, 14.6]} & -- & \textbf{91.7} {\scriptsize[89.2, 105]} & -- \\
-    \quad LM & 15.2 {\scriptsize[14.3, 15.9]} & 2/20\textsuperscript{\textdaggerdbl} & 101 {\scriptsize[91.6, 111]} & 4/20\textsuperscript{\textdagger} \\
-    \quad LMR & 14.9 {\scriptsize[14.0, 15.3]} & 5/20 & 94.9 {\scriptsize[88.6, 106]} & 10/20 \\
-    \quad LS & 58.1 {\scriptsize[58.0, 58.2]} & 0/20\textsuperscript{\textdaggerdbl} & 339 {\scriptsize[339, 339]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad CV & 56.8 {\scriptsize[55.3, 56.9]} & 0/20\textsuperscript{\textdaggerdbl} & 337 {\scriptsize[335, 337]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad WL & 17.3 {\scriptsize[17.1, 17.5]} & 2/20\textsuperscript{\textdaggerdbl} & 120 {\scriptsize[117, 121]} & 2/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=6/7$) & $\mathbf{14.2}^{\pm 2.38}$ & -- & $\mathbf{91.7}^{\pm 22.5}$ & -- \\
+    \quad LM & $15.2^{\pm 3.99}$ & 2/20\textsuperscript{\textdaggerdbl} & $101^{\pm 26.2}$ & 4/20\textsuperscript{\textdagger} \\
+    \quad LMR & $14.9^{\pm 4.11}$ & 5/20 & $94.9^{\pm 27.5}$ & 10/20 \\
+    \quad LS & $58.1^{\pm 0.126}$ & 0/20\textsuperscript{\textdaggerdbl} & $339^{\pm 0.292}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad CV & $56.8^{\pm 0.925}$ & 0/20\textsuperscript{\textdaggerdbl} & $337^{\pm 1.44}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad WL & $17.3^{\pm 0.381}$ & 2/20\textsuperscript{\textdaggerdbl} & $120^{\pm 3.04}$ & 2/20\textsuperscript{\textdaggerdbl} \\
     \quad LMR vs.\ LM & -- & 14/20 & -- & 16/20\textsuperscript{\textdagger} \\
     \midrule
     \multicolumn{5}{l}{$\Delta t = 0.08$} \\
     \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
-    \quad Fixed ($T^*=4/4$) & 37.8 {\scriptsize[36.8, 40.5]} & -- & 209 {\scriptsize[205, 213]} & -- \\
-    \quad LM (equal budget) & \textbf{35.4} {\scriptsize[34.8, 37.9]} & 17/20\textsuperscript{\textdagger} & \textbf{182} {\scriptsize[177, 192]} & 18/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=4/4$) & $37.8^{\pm 10.1}$ & -- & $209^{\pm 21.3}$ & -- \\
+    \quad LM (equal budget) & $\mathbf{35.4}^{\pm 4.86}$ & 17/20\textsuperscript{\textdagger} & $\mathbf{182}^{\pm 26.4}$ & 18/20\textsuperscript{\textdaggerdbl} \\
     \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
-    \quad Fixed ($T^*=4/5$) & \textbf{34.8} {\scriptsize[33.9, 35.8]} & -- & \textbf{175} {\scriptsize[171, 190]} & -- \\
-    \quad LM & 35.3 {\scriptsize[34.9, 38.0]} & 5/20 & 184 {\scriptsize[177, 194]} & 4/20\textsuperscript{\textdagger} \\
-    \quad LMR & 35.5 {\scriptsize[34.9, 37.6]} & 6/20 & 178 {\scriptsize[170, 193]} & 9/20 \\
-    \quad LS & 164 {\scriptsize[164, 164]} & 0/20\textsuperscript{\textdaggerdbl} & 501 {\scriptsize[501, 502]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad CV & 158 {\scriptsize[158, 158]} & 0/20\textsuperscript{\textdaggerdbl} & 497 {\scriptsize[497, 497]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad WL & 44.6 {\scriptsize[44.2, 44.9]} & 0/20\textsuperscript{\textdaggerdbl} & 260 {\scriptsize[241, 270]} & 1/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=4/5$) & $\mathbf{34.8}^{\pm 1.99}$ & -- & $\mathbf{175}^{\pm 26.5}$ & -- \\
+    \quad LM & $35.3^{\pm 4.94}$ & 5/20 & $184^{\pm 26.8}$ & 4/20\textsuperscript{\textdagger} \\
+    \quad LMR & $35.5^{\pm 7.55}$ & 6/20 & $178^{\pm 37.0}$ & 9/20 \\
+    \quad LS & $164^{\pm 0.299}$ & 0/20\textsuperscript{\textdaggerdbl} & $501^{\pm 0.337}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad CV & $158^{\pm 0.247}$ & 0/20\textsuperscript{\textdaggerdbl} & $497^{\pm 0.288}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad WL & $44.6^{\pm 4.77}$ & 0/20\textsuperscript{\textdaggerdbl} & $260^{\pm 22.2}$ & 1/20\textsuperscript{\textdaggerdbl} \\
     \quad LMR vs.\ LM & -- & 11/20 & -- & 17/20\textsuperscript{\textdaggerdbl} \\
     \midrule
     \multicolumn{5}{l}{$\Delta t = 0.1$} \\
     \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
-    \quad Fixed ($T^*=3/4$) & 58.2 {\scriptsize[56.8, 61.2]} & -- & 279 {\scriptsize[273, 297]} & -- \\
-    \quad LM (equal budget) & \textbf{55.1} {\scriptsize[53.6, 59.2]} & 16/20\textsuperscript{\textdagger} & \textbf{250} {\scriptsize[244, 261]} & 20/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=3/4$) & $58.2^{\pm 4.60}$ & -- & $279^{\pm 39.1}$ & -- \\
+    \quad LM (equal budget) & $\mathbf{55.1}^{\pm 6.60}$ & 16/20\textsuperscript{\textdagger} & $\mathbf{250}^{\pm 28.0}$ & 20/20\textsuperscript{\textdaggerdbl} \\
     \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
-    \quad Fixed ($T^*=3/4$) & 54.4 {\scriptsize[53.2, 55.5]} & -- & 248 {\scriptsize[240, 257]} & -- \\
-    \quad LM & 55.2 {\scriptsize[54.4, 59.2]} & 6/20 & 255 {\scriptsize[249, 266]} & 2/20\textsuperscript{\textdaggerdbl} \\
-    \quad LMR & \textbf{54.1} {\scriptsize[53.4, 60.3]} & 6/20 & \textbf{245} {\scriptsize[241, 254]} & 14/20 \\
-    \quad LS & 240 {\scriptsize[240, 240]} & 0/20\textsuperscript{\textdaggerdbl} & 563 {\scriptsize[562, 563]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad CV & 214 {\scriptsize[214, 214]} & 0/20\textsuperscript{\textdaggerdbl} & 553 {\scriptsize[553, 553]} & 0/20\textsuperscript{\textdaggerdbl} \\
-    \quad WL & 67.7 {\scriptsize[66.8, 74.0]} & 0/20\textsuperscript{\textdaggerdbl} & 355 {\scriptsize[344, 364]} & 1/20\textsuperscript{\textdaggerdbl} \\
+    \quad Fixed ($T^*=3/4$) & $54.4^{\pm 2.60}$ & -- & $248^{\pm 34.8}$ & -- \\
+    \quad LM & $55.2^{\pm 6.50}$ & 6/20 & $255^{\pm 26.8}$ & 2/20\textsuperscript{\textdaggerdbl} \\
+    \quad LMR & $\mathbf{54.1}^{\pm 9.15}$ & 6/20 & $\mathbf{245}^{\pm 35.2}$ & 14/20 \\
+    \quad LS & $240^{\pm 0.519}$ & 0/20\textsuperscript{\textdaggerdbl} & $563^{\pm 0.460}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad CV & $214^{\pm 0.168}$ & 0/20\textsuperscript{\textdaggerdbl} & $553^{\pm 0.260}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad WL & $67.7^{\pm 9.35}$ & 0/20\textsuperscript{\textdaggerdbl} & $355^{\pm 31.5}$ & 1/20\textsuperscript{\textdaggerdbl} \\
     \quad LMR vs.\ LM & -- & 8/20 & -- & 16/20\textsuperscript{\textdagger} \\
     \bottomrule
   \end{tabular}

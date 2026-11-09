@@ -1,25 +1,26 @@
 \begin{table}[t]
   \centering
-  \caption{SMAPE (\%) of all methods: median over 20 seeds and validation horizons $T_{\mathrm{val}} = 1, \dots, 10$ (symmetric mean absolute percentage error in physical coordinates, range 0--200\%). Fixed-horizon references are trained at the MSE-selected $T^*_{\mathrm{all}}$. Bold: best value within the budget-based and within the 200-epoch comparison.}
+  \caption{SMAPE (\%) of all methods: median over 20 seeds and validation horizons $T_{\mathrm{val}} = 1, \dots, 10$ (symmetric mean absolute percentage error in physical coordinates, range 0--200\%); $\pm$: standard deviation over seeds of the per-seed median. Fixed-horizon references are trained at the MSE-selected $T^*_{\mathrm{all}}$. Bold: best value within the budget-based and within the 200-epoch comparison.}
   \label{tab:smape}
-  \small
+  \footnotesize
+  \setlength{\tabcolsep}{3pt}
   \begin{tabular}{ll cc cccccc}
     \toprule
     & & \multicolumn{2}{c}{Equal budget} & \multicolumn{6}{c}{200 epochs} \\
     \cmidrule(lr){3-4} \cmidrule(lr){5-10}
     System & $\Delta t$ & Fixed $T^*$ & LM & Fixed $T^*$ & LM & LMR & LS & CV & WL \\
     \midrule
-    Lorenz-63 & 0.05 & 11.9 & \textbf{11.1} & 11.1 & \textbf{10.9} & \textbf{10.9} & 11.6 & 11.5 & 11.5 \\
-     & 0.08 & 15.1 & \textbf{11.8} & 12.4 & \textbf{12.3} & 12.9 & 14.4 & 12.8 & 14.2 \\
-     & 0.1 & 16.9 & \textbf{13.9} & 14.0 & \textbf{13.1} & 15.5 & 17.1 & 14.1 & 15.4 \\
+    Lorenz-63 & 0.05 & $11.9^{\pm 0.9}$ & $\mathbf{11.1}^{\pm 2.8}$ & $11.1^{\pm 0.9}$ & $\mathbf{10.9}^{\pm 3.1}$ & $\mathbf{10.9}^{\pm 3.6}$ & $11.6^{\pm 0.8}$ & $11.5^{\pm 0.6}$ & $11.5^{\pm 1.1}$ \\
+     & 0.08 & $15.1^{\pm 1.5}$ & $\mathbf{11.8}^{\pm 3.2}$ & $12.4^{\pm 1.4}$ & $\mathbf{12.3}^{\pm 4.0}$ & $12.9^{\pm 2.4}$ & $14.4^{\pm 1.4}$ & $12.8^{\pm 1.4}$ & $14.2^{\pm 2.1}$ \\
+     & 0.1 & $16.9^{\pm 2.0}$ & $\mathbf{13.9}^{\pm 3.5}$ & $14.0^{\pm 5.3}$ & $\mathbf{13.1}^{\pm 1.1}$ & $15.5^{\pm 4.7}$ & $17.1^{\pm 3.7}$ & $14.1^{\pm 2.7}$ & $15.4^{\pm 2.4}$ \\
     \midrule
-    Lorenz-96 & 0.05 & 51.3 & \textbf{45.8} & \textbf{44.8} & 46.6 & 45.6 & 72.3 & 71.7 & 49.1 \\
-     & 0.08 & 59.8 & \textbf{56.9} & \textbf{56.4} & 56.9 & 56.8 & 87.0 & 86.6 & 63.3 \\
-     & 0.1 & 67.2 & \textbf{63.3} & 63.4 & 63.6 & \textbf{63.2} & 92.2 & 91.1 & 70.7 \\
+    Lorenz-96 & 0.05 & $51.3^{\pm 3.8}$ & $\mathbf{45.8}^{\pm 3.7}$ & $\mathbf{44.8}^{\pm 3.4}$ & $46.6^{\pm 3.9}$ & $45.6^{\pm 4.2}$ & $72.3^{\pm 0.1}$ & $71.7^{\pm 0.4}$ & $49.1^{\pm 0.4}$ \\
+     & 0.08 & $59.8^{\pm 2.6}$ & $\mathbf{56.9}^{\pm 2.9}$ & $\mathbf{56.4}^{\pm 2.9}$ & $56.9^{\pm 2.8}$ & $56.8^{\pm 3.8}$ & $87.0^{\pm 0.1}$ & $86.6^{\pm 0.1}$ & $63.3^{\pm 2.1}$ \\
+     & 0.1 & $67.2^{\pm 3.6}$ & $\mathbf{63.3}^{\pm 2.5}$ & $63.4^{\pm 3.1}$ & $63.6^{\pm 2.4}$ & $\mathbf{63.2}^{\pm 3.2}$ & $92.2^{\pm 0.2}$ & $91.1^{\pm 0.1}$ & $70.7^{\pm 2.7}$ \\
     \midrule
-    Rössler & 0.05 & 32.3 & \textbf{32.1} & \textbf{31.3} & 31.5 & 31.6 & 52.1 & 50.6 & 32.0 \\
-     & 0.08 & 36.4 & \textbf{36.0} & 36.3 & \textbf{36.2} & 36.6 & 36.6 & 36.6 & 36.6 \\
-     & 0.1 & 37.6 & \textbf{37.4} & 37.6 & 37.4 & \textbf{37.3} & 37.7 & 37.9 & 37.4 \\
+    Rössler & 0.05 & $32.3^{\pm 1.8}$ & $\mathbf{32.1}^{\pm 1.0}$ & $\mathbf{31.3}^{\pm 0.9}$ & $31.5^{\pm 1.0}$ & $31.6^{\pm 3.1}$ & $52.1^{\pm 7.8}$ & $50.6^{\pm 8.4}$ & $32.0^{\pm 0.8}$ \\
+     & 0.08 & $36.4^{\pm 1.6}$ & $\mathbf{36.0}^{\pm 0.7}$ & $36.3^{\pm 0.8}$ & $\mathbf{36.2}^{\pm 0.5}$ & $36.6^{\pm 0.7}$ & $36.6^{\pm 1.5}$ & $36.6^{\pm 1.6}$ & $36.6^{\pm 0.7}$ \\
+     & 0.1 & $37.6^{\pm 1.2}$ & $\mathbf{37.4}^{\pm 0.5}$ & $37.6^{\pm 0.8}$ & $37.4^{\pm 0.6}$ & $\mathbf{37.3}^{\pm 0.7}$ & $37.7^{\pm 1.7}$ & $37.9^{\pm 1.8}$ & $37.4^{\pm 0.6}$ \\
     \bottomrule
   \end{tabular}
 \end{table}
