@@ -3,23 +3,23 @@
   \caption{SMAPE (\%) of all methods: median over 20 seeds and validation horizons $T_{\mathrm{val}} = 1, \dots, 10$ (symmetric mean absolute percentage error in physical coordinates, range 0--200\%). Fixed-horizon references are trained at the MSE-selected $T^*_{\mathrm{all}}$. Bold: best value within the budget-based and within the 200-epoch comparison.}
   \label{tab:smape}
   \small
-  \begin{tabular}{ll cc ccccc}
+  \begin{tabular}{ll cc cccccc}
     \toprule
-    & & \multicolumn{2}{c}{Equal budget} & \multicolumn{5}{c}{200 epochs} \\
-    \cmidrule(lr){3-4} \cmidrule(lr){5-9}
-    System & $\Delta t$ & Fixed $T^*$ & LM & Fixed $T^*$ & LM & LMR & LS & CV \\
+    & & \multicolumn{2}{c}{Equal budget} & \multicolumn{6}{c}{200 epochs} \\
+    \cmidrule(lr){3-4} \cmidrule(lr){5-10}
+    System & $\Delta t$ & Fixed $T^*$ & LM & Fixed $T^*$ & LM & LMR & LS & CV & WL \\
     \midrule
-    Lorenz-63 & 0.05 & 11.9 & \textbf{11.1} & 11.1 & \textbf{10.9} & \textbf{10.9} & 11.6 & 11.5 \\
-     & 0.08 & 15.1 & \textbf{11.8} & 12.4 & \textbf{12.3} & 12.9 & 14.4 & 12.8 \\
-     & 0.1 & 16.9 & \textbf{13.9} & 14.0 & \textbf{13.1} & 15.5 & 17.1 & 14.1 \\
+    Lorenz-63 & 0.05 & 11.9 & \textbf{11.1} & 11.1 & \textbf{10.9} & \textbf{10.9} & 11.6 & 11.5 & 11.5 \\
+     & 0.08 & 15.1 & \textbf{11.8} & 12.4 & \textbf{12.3} & 12.9 & 14.4 & 12.8 & 14.2 \\
+     & 0.1 & 16.9 & \textbf{13.9} & 14.0 & \textbf{13.1} & 15.5 & 17.1 & 14.1 & 15.4 \\
     \midrule
-    Lorenz-96 & 0.05 & 51.3 & \textbf{45.8} & \textbf{44.8} & 46.6 & 45.6 & 72.3 & 71.7 \\
-     & 0.08 & 59.8 & \textbf{56.9} & \textbf{56.4} & 56.9 & 56.8 & 87.0 & 86.6 \\
-     & 0.1 & 67.2 & \textbf{63.3} & 63.4 & 63.6 & \textbf{63.2} & 92.2 & 91.1 \\
+    Lorenz-96 & 0.05 & 51.3 & \textbf{45.8} & \textbf{44.8} & 46.6 & 45.6 & 72.3 & 71.7 & 49.1 \\
+     & 0.08 & 59.8 & \textbf{56.9} & \textbf{56.4} & 56.9 & 56.8 & 87.0 & 86.6 & 63.3 \\
+     & 0.1 & 67.2 & \textbf{63.3} & 63.4 & 63.6 & \textbf{63.2} & 92.2 & 91.1 & 70.7 \\
     \midrule
-    Rössler & 0.05 & 32.3 & \textbf{32.1} & \textbf{31.3} & 31.5 & 31.6 & 52.1 & 50.6 \\
-     & 0.08 & 36.4 & \textbf{36.0} & 36.3 & \textbf{36.2} & 36.6 & 36.6 & 36.6 \\
-     & 0.1 & 37.6 & \textbf{37.4} & 37.6 & 37.4 & \textbf{37.3} & 37.7 & 37.9 \\
+    Rössler & 0.05 & 32.3 & \textbf{32.1} & \textbf{31.3} & 31.5 & 31.6 & 52.1 & 50.6 & 32.0 \\
+     & 0.08 & 36.4 & \textbf{36.0} & 36.3 & \textbf{36.2} & 36.6 & 36.6 & 36.6 & 36.6 \\
+     & 0.1 & 37.6 & \textbf{37.4} & 37.6 & 37.4 & \textbf{37.3} & 37.7 & 37.9 & 37.4 \\
     \bottomrule
   \end{tabular}
 \end{table}
