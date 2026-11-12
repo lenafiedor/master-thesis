@@ -374,6 +374,8 @@ The following subsections go through the methods in the order in which they were
 \subsection{Fixed-Horizon Baseline}
 \label{sec:results-fixed}
 
+Fixed-horizon models are trained at a single horizon $T \in \{1, \dots, 10\}$ for 20 or 200 epochs; the best of them serves as the reference for all other methods (Section~\ref{sec:fixed-horizon}).
+
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/fixed_horizon_curves.pdf}
@@ -401,12 +403,16 @@ For Rössler, the error keeps decreasing up to the longest tested horizon, so th
 \subsection{Linear Horizon Scheduler}
 \label{sec:results-ls}
 
+LS starts at $T = 1$ and increases the horizon by one every 20 epochs up to $T_{\max} = 10$ (Section~\ref{sec:ls}).
+
 LS is the least reliable method. On Lorenz-63, it has the highest error of all methods. On Lorenz-96 and on Rössler at $\Delta t = 0.05$, it collapses: all seeds converge to practically the same poor solution, several times worse than the fixed-horizon optimum. Only on Rössler at the larger timesteps does it come close to the optimum.
 
 This is what the design of LS suggests (Section~\ref{sec:ls}): the last stages of the schedule force rollouts up to $T_{\max} = 10$, which exceeds the predictable range of the two Lorenz systems, while the slowly diverging Rössler system tolerates such horizons.
 
 \subsection{Cross-Validation Minimum Search}
 \label{sec:results-cv}
+
+CV increases the horizon during a curriculum phase, selects the horizon with the lowest validation error, and continues training there (Section~\ref{sec:cv}).
 
 \input{tables/table_cv}
 
@@ -420,6 +426,8 @@ Overall, the online selection of CV does not replace the grid search.
 
 \subsection{Lyapunov-Mean Horizon}
 \label{sec:results-lm}
+
+LM assigns each training sample a horizon around a base horizon derived from the Lyapunov time, shorter for locally more chaotic states (Section~\ref{sec:lm}).
 
 \input{tables/table_horizons}
 
@@ -435,12 +443,16 @@ At 200 epochs, LM stays close to an oracle choice of the fixed horizon on all sy
 \subsubsection{Randomized Lyapunov-Mean Control}
 \label{sec:results-lmr}
 
+LMR uses the same horizons as LM but randomly permutes them across samples, removing the link to the local FTLE (Section~\ref{sec:lmr}).
+
 Assigning horizons by the local FTLE helps only on Lorenz-63, where randomly permuting the horizons (LMR) increases the error at the two larger timesteps. On Lorenz-96 and Rössler, LMR is as good as or slightly better than LM. On Rössler, the comparison has little meaning, since the clipped base horizon leaves almost no room for different assignments. Most of the benefit of LM therefore comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
 
 \subsection{Weighted Loss}
 \label{sec:results-wl}
 
-WL (Appendix~\ref{app:weighted-loss}) does not improve on the fixed-horizon optimum on any system or timestep, and the difference is significant over the full validation window in every configuration. It is also worse than LM everywhere, although both train around the same base horizon. Down-weighting the late rollout steps of locally unstable samples removes part of the training signal that makes multi-step training useful, without a gain in short-term accuracy.
+WL trains at the fixed horizon $T_{\mathrm{base}}$ and down-weights the later rollout steps of locally unstable samples (Appendix~\ref{app:weighted-loss}).
+
+It does not improve on the fixed-horizon optimum on any system or timestep, and the difference is significant over the full validation window in every configuration. It is also worse than LM everywhere, although both train around the same base horizon. Down-weighting the late rollout steps of locally unstable samples removes part of the training signal that makes multi-step training useful, without a gain in short-term accuracy.
 
 \subsection{Gradient Scaling}
 \label{sec:gradient-scaling}
