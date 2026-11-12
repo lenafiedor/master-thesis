@@ -1,11 +1,6 @@
 \begin{table}[t]
   \centering
-  \caption{Horizons selected by the cross-validation method (CV, 200 epochs, 20 seeds).
-  Selected $T$: median $\pm$ standard deviation over seeds of the horizon whose stage-end checkpoint
-  had the lowest smoothed validation MSE over $T_{\mathrm{val}}=1,\dots,10$;
-  training then continues at that horizon from the selected checkpoint. Selection
-  epoch: median $\pm$ standard deviation of the epoch at which the curriculum $T=1,\dots,10$ ended.
-  $T^*_{\mathrm{all}}$: cross-validated fixed horizon after 200 epochs.}
+  \caption{Horizons selected by the cross-validation method (200 epochs). Selected $T$: median $\pm$ standard deviation of the horizon whose stage-end checkpoint had the lowest validation MSE over $T_{\mathrm{val}}=1,\dots,10$; training then continues at that horizon from the selected checkpoint. Selection epoch: median $\pm$ standard deviation of the epoch at which the curriculum $T=1,\dots,10$ ended. $T^*_{\mathrm{all}}$: cross-validated fixed horizon after 200 epochs.}
   \label{tab:cv-horizons}
   \small
   \begin{tabular}{ll ccc}
