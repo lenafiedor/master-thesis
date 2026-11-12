@@ -1,14 +1,6 @@
 \begin{table}[p]
   \centering
-  \caption{Rössler: validation MSE ($\times 10^{-3}$, normalized coordinates) at the
-  first validation step ($T_{\mathrm{val}}=1$) and pooled over all validation
-  horizons ($T_{\mathrm{val}}=1,\dots,10$). MSE: median over 20 seeds (and
-  validation horizons), $\pm$: standard deviation over seeds of the per-seed median; bold: lowest median
-  within a training regime. Wins: seeds on which the method beats the fixed model
-  with the cross-validated horizon $T^*$ of the same regime (last row: LMR vs.\ LM).
-  \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, two-sided exact sign test,
-  Holm-corrected within each $\Delta t$ and scope.
-  $T^*$ is given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$.}
+  \caption{Rössler: median validation MSE ($\times 10^{-3}$, $\pm$ std over seeds). Wins: seeds beating the fixed model at $T^*$ of the same regime; \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$ (Holm-corrected sign test). $T^*$ given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$; bold: best per regime.}
   \label{tab:results-rossler}
   \small
   \begin{tabular}{l cc cc}

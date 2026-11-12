@@ -228,7 +228,7 @@ for a number of laps and then switches to the other wing. We simulate a Lorenz-6
 
 The two quantities behave very differently. The lap duration is almost constant: over 514 detected laps, its mean is $0.707$ time units with a standard deviation of only $0.056$, and 90\% of the laps take between $0.64$ and $0.81$ time units. The time the trajectory stays on one wing before switching, in contrast, varies widely, from $0.76$ to $8.06$ time units. Whether the trajectory performs another lap or crosses to the other wing is decided when it passes close to the origin, the region in which the leading local Lyapunov exponent is largest (on average $2.46$ for $|x| < 3$, compared with $-0.61$ for $|x| > 10$ on the outer parts of the lobes; see Figure~\ref{fig:lorenz-lle-heatmap}). A rollout longer than one lap therefore always has to predict at least one such decision, and small errors in the prediction can send the forecast to the wrong wing.
 
-The mean lap duration is therefore a reasonable upper bound for the training rollout of Lorenz-63. Expressed in model steps, it corresponds to about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$, and to $0.707 \cdot \lambda_{\max} \approx 0.64$ of the maximal Lyapunov exponent. Indeed, the cross-validated optimal fixed horizons of Lorenz-63 (8, 6 and 6 steps after 200 epochs, see Section~\ref{sec:general-observations}) all lie below this bound.
+The mean lap duration is therefore a reasonable upper bound for the training rollout of Lorenz-63. Expressed in model steps, it corresponds to about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$, and to $0.707 \cdot \lambda_{\max} \approx 0.64$ of the maximal Lyapunov exponent. Indeed, the cross-validated optimal fixed horizons of Lorenz-63 (8, 6 and 6 steps after 200 epochs, see Section~\ref{sec:results-fixed}) all lie below this bound.
 
 \begin{figure}[t]
     \centering
@@ -359,66 +359,88 @@ where $S_N$ denotes the set of permutations of the sample indices. The permutati
 \subsection{Reporting Conventions}
 \label{sec:reporting}
 
-% \begin{itemize}
-%     \item Fixed-horizon models trained for 20 epochs (for the budget-based comparison),
-%     \item Fixed-horizon models trained for 200 epochs (for the comparison at equal training length),
-%     \item LS models trained for 200 epochs,
-%     \item CV models trained for 200 epochs,
-%     \item Budget-based LM models trained with a rollout-step budget equal to the total used to train all 20-epoch fixed-horizon models,
-%     \item LM models trained for 200 epochs,
-%     \item LMR models trained for 200 epochs.
-% \end{itemize}
+All models are evaluated on the validation split at the horizons $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
 
-We ran a set of experiments on the three aforementioned dynamical systems. All models were evaluated on the validation split on the same set of horizon values $T_{\mathrm{val}} \in \{1, \dots, 10\}$ that was used for training. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. As a performance measure we report the median across 20 seeds: (1) of the one-step MSE ($T_{\mathrm{val}} = 1$) and (2) pooled over all validation horizons $T_{\mathrm{val}}=1,\dots,10$. Each yields a single value per method, enabling a straightforward comparison.
+Each method is compared with the best fixed-horizon model of the same training regime: budget-based LM with fixed-horizon models trained for 20 epochs, and all other methods with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
 
-Two further error measures are reported in Appendix~\ref{app:metrics}: the normalized root-mean-square error (NRMSE), i.e. the per-sample RMSE in normalized coordinates, so that each coordinate is scaled by its standard deviation over the attractor, and the symmetric mean absolute percentage error (SMAPE, 0-200\%) in physical coordinates, as used by \cite{zhuang_horizon_2025}. To assess forecasts beyond the training window, Section~\ref{sec:long-horizon} additionally uses the valid prediction time (VPT): the number of steps before the NRMSE of a rollout first exceeds a threshold $\epsilon$, expressed in Lyapunov times as $\mathrm{VPT} \cdot \Delta t \cdot \lambda_{\max}$.
+Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. Results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
 
-For every scope, the reference baseline is the fixed-horizon model whose training horizon $T^*$ achieves the lowest validation MSE among $T \in \{1,\dots,10\}$. $T^*$ is selected separately for each scope and each training regime.
+The following subsections go through the methods in the order in which they were introduced.
 
-Budget-based LM models are compared with fixed-horizon models trained for 20 epochs, and all adaptive models trained for 200 epochs are compared with fixed-horizon models trained for 200 epochs. Each table reports the median MSE pooled over the seeds, along with the standard deviation and the number of seeds in which the method beats the reference. The lowest median within each training regime is shown in bold. Significance is assessed with a two-sided exact sign test over the 20 seeds. The $p$-values are Holm-corrected within each system, timestep and scope, i.e. over the six comparisons in one block of a table.
+\input{tables/table_lorenz}
+\input{tables/table_rossler}
+\input{tables/table_lorenz96}
 
-\subsection{General Observations}
-\label{sec:general-observations}
-
-\input{tables/table_horizons}
+\subsection{Fixed-Horizon Baseline}
+\label{sec:results-fixed}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/fixed_horizon_curves.pdf}
-  \caption{Validation error of fixed-horizon models as a function of the training horizon $T$, pooled over all validation horizons. Each curve shows the median MSE over 20 seeds relative to the best 200-epoch fixed-horizon model of the same panel (log scale). Enlarged markers indicate the optimal fixed horizon $T^*$; the dashed line marks the base horizon $T_{\mathrm{base}}$ chosen by LM.}
+  \caption{Median validation MSE of fixed-horizon models vs.\ training horizon $T$, pooled over all $T_{\mathrm{val}}$, relative to the best 200-epoch model. Large markers: $T^*$; dashed line: $T_{\mathrm{base}}$ of LM.}
   \label{fig:fixed-horizon-curves}
 \end{figure}
-
-\paragraph{Base horizon selected by LM.} 
-The estimated MLE $\hat\lambda_{\max}$ is very stable across different $\Delta t$: 0.904-0.905 for Lorenz-63, 1.173-1.182 for Lorenz-96 and 0.193-0.196 for Rössler (Table~\ref{tab:horizons}), which aligns with the literature values \cite{geurts_lyapunov_2020, karimi_extensive_2010, ayers_supervised_2023}.
-
-With the chosen Lyapunov fraction parameter $\gamma = 0.45$, the rule in Eq.~\eqref{eq:t-base} gives 5-10 steps for Lorenz-63 and 4-8 steps for Lorenz-96, depending on $\Delta t$. For Rössler, the slow divergence yields unclipped horizons of 23-47 steps, which are clipped to $T_{\max} = 10$. The resulting horizon is therefore only 0.10-0.20 Lyapunov times and no longer follows the intended scaling.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/optimal_horizon_budget.pdf}
-  \caption{Dependence of the optimal fixed horizon on the training budget. Top: cross-validated optimum $T^*$ after 20 and 200 epochs per horizon (arrows mark a change) and its interquartile range, for the one-step error (left) and the error pooled over $T_{\mathrm{val}} = 1, \dots, 10$ (right). Bottom: excess MSE of the 200-epoch model trained at $T^*_{20}$ over the 200-epoch model trained at $T^*_{200}$.}
+  \caption{Optimal fixed horizon $T^*$ after 20 and 200 epochs, with the interquartile range over seeds (top), and the excess MSE of training 200 epochs at $T^*_{20}$ instead of $T^*_{200}$ (bottom). Left: $T_{\mathrm{val}}=1$; right: all $T_{\mathrm{val}}$.}
   \label{fig:optimal-horizon-budget}
 \end{figure}
 
-\paragraph{Dependence on the training budget.}
-The optimal horizon chosen by cross-validation \emph{depends on the training budget}. Longer training lengthens the optimum by one to three steps in eight of the nine configurations, as long-horizon training requires more training time to pay off. Looking at cross-validation results, after 20 epochs the error grows steeply beyond $T^*$, whereas after 200 epochs the right flank is considerably flatter (Figure~\ref{fig:fixed-horizon-curves}). Expressed in Lyapunov times, the 200-epoch optima of Lorenz-63 and Lorenz-96 lie between 0.36 and 0.54, so the $\gamma = 0.45$ choice falls within this range. For Rössler, the error decreases monotonically and is within 10\% of its minimum for all $T \geq 5$-$6$. The optimum lies at the boundary of the search range and cannot be identified for $T \leq 10$.
+\paragraph{The optimal horizon depends on the training budget.}
+With longer training, the optimal horizon moves to longer rollouts in almost every configuration (Table~\ref{tab:horizons}, Figure~\ref{fig:optimal-horizon-budget}). After 20 epochs, the error rises steeply beyond $T^*$; after 200 epochs, this rise is much flatter (Figure~\ref{fig:fixed-horizon-curves}). Long-horizon training needs more time to pay off. A horizon found with a cheap search therefore does not transfer to a longer training run: training for 200 epochs at the 20-epoch optimum gives a noticeably higher error than at the 200-epoch optimum. The optimal horizon is thus a property of the system \emph{and} of the available compute, which motivates choosing it during training rather than by a separate grid search.
 
-Figure~\ref{fig:optimal-horizon-budget} summarizes how the outcome of the grid search depends on the training time. The optimum changes between 20 and 200 epochs in 14 of the 18 setups. For the pooled error (right plot), $T^*$ always moves to longer horizons. Horizons selected by a cheap search do not transfer to a longer training run. Training for 200 epochs at $T^*_{20}$ instead of $T^*_{200}$ increases the pooled median MSE (bottom plot).
-In one-step validation (left plot), the optimum is poorly determined: the optima selected for individual seeds span an interquartile range of up to six steps. Furthermore, increasing the computing budget does not reduce its variability. This is probably due to the simplicity of one-step prediction task - 20 epochs is enough for the models to converge, so any further training does not significantly change the parameters (bottom plot; excessive MSE coming from using the "wrong" $T^*$ does not exceed 5\% in 8 out of 9 cases).
+\paragraph{The optimal horizon depends on what is evaluated.}
+The best horizon for one-step accuracy is consistently shorter than the best horizon for the pooled error, so no single training horizon is optimal for both. The one-step optimum is also poorly determined: it varies widely between seeds and does not stabilize with longer training.
 
-Finding the horizon that is optimal for a given budget requires repeating the search at that budget, i.e. training a number of models for every one that is used. The horizon is thus not a property of the system alone but of the system together with the available compute, which motivates choosing it during training rather than by a separate grid search.
+\paragraph{Rössler.}
+For Rössler, the error keeps decreasing up to the longest tested horizon, so the optimum lies at the boundary of the search range.
+% TODO: Rossler too easy, add a section about the simplified model.
 
-\paragraph{Agreement between optimal fixed and adaptive $\mathbf{T}$.}
-For the 200-epoch regime and the pooled validation error, $T_{\mathrm{base}}$ coincides with $T^*$ in three of the six Lorenz configurations. Compared with the 20-epoch optimum, $T_{\mathrm{base}}$ is never shorter than $T^*$. The Lyapunov-based rule thus anticipates the optimum of well-trained models rather than that of short training, and it is dictated by the choice of Lyapunov fraction $\gamma$. The agreement for Rössler (both at $T = 10$) is trivial, since both are bounded by $T_{\max}$.
+\subsection{Linear Horizon Scheduler}
+\label{sec:results-ls}
 
-\paragraph{Short-term versus pooled optimum.}
-The optimal horizon for one-step accuracy is consistently shorter than for the pooled error. After 200 epochs, the pooled
-optima are up to seven steps longer than for $T_{\mathrm{val}}=1$. Since $T_{\mathrm{base}}$ targets multi-step predictability, it is always at least as long as the one-step optimum and exceeds it by more than two steps in five of the nine configurations. This explains why LM performs worse relative to the fixed-horizon baseline at $T_{\mathrm{val}}=1$ than over the full validation window: training for long-horizon stability costs some one-step accuracy (see Figure~\ref{fig:mse-heatmap-budget}).
+LS is the least reliable method. On Lorenz-63, it has the highest error of all methods. On Lorenz-96 and on Rössler at $\Delta t = 0.05$, it collapses: all seeds converge to practically the same poor solution, several times worse than the fixed-horizon optimum. Only on Rössler at the larger timesteps does it come close to the optimum.
 
-\paragraph{Horizons selected by cross-validation method.}
+This is what the design of LS suggests (Section~\ref{sec:ls}): the last stages of the schedule force rollouts up to $T_{\max} = 10$, which exceeds the predictable range of the two Lorenz systems, while the slowly diverging Rössler system tolerates such horizons.
+
+\subsection{Cross-Validation Minimum Search}
+\label{sec:results-cv}
+
 \input{tables/table_cv}
-Table~\ref{tab:cv-horizons} summarizes the horizons selected online by CV (see Section~\ref{sec:cv}). On Lorenz-63 and Rössler, the curriculum ends after 50-99 epochs, leaving roughly 100-150 epochs of training at the selected horizon. Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$ and usually longer, corresponding to the boundary optimum. This bias is expected from the design of the method: the candidate for a longer horizon has been trained for more epochs in total, so its validation score also reflects the extra training time and not only the horizon (see Section~\ref{sec:cv}). On Lorenz-96, the selected horizons (7-9) are not meaningful because the models never leave their initial error level during the curriculum (see Section~\ref{sec:results-lorenz96}).
+
+\paragraph{Selected horizons.}
+Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$, and usually longer (Table~\ref{tab:cv-horizons}). This bias follows from the design of the method: a candidate for a longer horizon has been trained for more epochs, so its validation score reflects the extra training time and not only the horizon.
+
+\paragraph{Error.}
+On Lorenz-63, CV is clearly worse than the fixed-horizon optimum, especially at $T_{\mathrm{val}} = 1$. On Lorenz-96 and on Rössler at $\Delta t = 0.05$, it collapses in the same way as LS: the validation error never leaves its initial level during the curriculum, so every stage ends as early as allowed and the selected horizon carries no information. On Rössler at the larger timesteps, CV is close to the optimum and selects the same horizon as the grid search.
+
+Overall, the online selection of CV does not replace the grid search.
+
+\subsection{Lyapunov-Mean Horizon}
+\label{sec:results-lm}
+
+\input{tables/table_horizons}
+
+\paragraph{Base horizon.}
+The estimated MLE is stable across timesteps and agrees with literature values \cite{geurts_lyapunov_2020, karimi_extensive_2010, ayers_supervised_2023} (Table~\ref{tab:horizons}). For the two Lorenz systems, the resulting base horizon lies in the same range of Lyapunov times as the 200-epoch fixed-horizon optima, and it coincides with $T^*$ in half of the configurations. It is never shorter than the 20-epoch optimum: the Lyapunov-based rule anticipates the optimum of well-trained models rather than that of short training. For Rössler, the slow divergence gives base horizons far above $T_{\max}$, so they are clipped to $T_{\max} = 10$ and no longer follow the intended scaling.
+
+\paragraph{Equal budget.}
+Trained with the same rollout budget as the 20-epoch fixed-horizon sweep, LM gives its clearest gains. On Lorenz-96, it beats the best fixed-horizon model of the sweep at every timestep and in both scopes; over the full validation window, it does so on almost every seed. On Lorenz-63, it is better over the full validation window but not at the first step. On Rössler, it does not improve on the fixed-horizon optimum.
+
+\paragraph{Equal training length.}
+At 200 epochs, LM stays close to an oracle choice of the fixed horizon on all systems over the full validation window, but is slightly and, on Lorenz-96, significantly worse. It loses more at $T_{\mathrm{val}} = 1$: $T_{\mathrm{base}}$ targets multi-step predictability and is longer than the one-step optimum, so training for long-horizon stability costs some one-step accuracy.
+
+\subsubsection{Randomized Lyapunov-Mean Control}
+\label{sec:results-lmr}
+
+Assigning horizons by the local FTLE helps only on Lorenz-63, where randomly permuting the horizons (LMR) increases the error at the two larger timesteps. On Lorenz-96 and Rössler, LMR is as good as or slightly better than LM. On Rössler, the comparison has little meaning, since the clipped base horizon leaves almost no room for different assignments. Most of the benefit of LM therefore comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
+
+\subsection{Weighted Loss}
+\label{sec:results-wl}
+
+WL (Appendix~\ref{app:weighted-loss}) does not improve on the fixed-horizon optimum on any system or timestep, and the difference is significant over the full validation window in every configuration. It is also worse than LM everywhere, although both train around the same base horizon. Down-weighting the late rollout steps of locally unstable samples removes part of the training signal that makes multi-step training useful, without a gain in short-term accuracy.
 
 \subsection{Gradient Scaling}
 \label{sec:gradient-scaling}
@@ -426,45 +448,20 @@ Table~\ref{tab:cv-horizons} summarizes the horizons selected online by CV (see S
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/gradient_scaling.pdf}
-  \caption{Gradient scaling ratio $g(T)$ (Eq.~\eqref{eq:g-t}) as a function of the loss horizon $T$ (median and 95\% CI). Untrained models use the same architecture and seeds. $g(T)$ is evaluated at the final parameters on 50 batches of the validation split.}
+  \caption{Gradient scaling ratio $g(T)$ (Eq.~\eqref{eq:g-t}) of trained fixed-horizon, LM and untrained models (median over seeds and 95\% CI).}
   \label{fig:gradient-scaling}
 \end{figure}
 
-To relate the horizon results to the optimization landscape, we computed $g(T)$ for $T = 1, \dots, 10$ for all 200-epoch fixed-horizon models, for LM, and for untrained models with the same seeds (Figure~\ref{fig:gradient-scaling}). The ratio is evaluated at the final parameters on 50 batches of the validation split, and we report the median over 20 seeds.
+To relate these results to the optimization landscape, we computed $g(T)$ for the 200-epoch fixed-horizon models, for LM, and for untrained models with the same seeds (Figure~\ref{fig:gradient-scaling}).
 
-\paragraph{Training creates the gradient amplification.} For untrained models, $g(T)$ stays between 0.5 and 0.8 for all horizons and systems. After training, it grows strongly with $T$. The amplification therefore appears only once the model has learned the divergence of the dynamics, which is when long-horizon losses become hard to optimize.
+\paragraph{Training creates the gradient amplification.} For untrained models, $g(T)$ stays below one at all horizons. After training, it grows strongly with $T$: the amplification appears once the model has learned the divergence of the dynamics.
 
-\paragraph{Long training horizons damp it.} Training at longer horizons reduces $g(T)$ on Lorenz-63 and Lorenz-96. At $T = 10$, $g(10)$ falls on Lorenz-63 and Lorenz-96, where the curve flattens almost completely at $\Delta t = 0.08$ and $0.1$. The effect is not monotone in the training horizon, however: on both systems, the highest values of $g(10)$ occur for training horizons of 2-4 steps, not for $T = 1$. On Rössler, $g(10)$ decreases with the training horizon only at $\Delta t = 0.08$ and $0.1$ and is nearly constant at $\Delta t = 0.05$.
+\paragraph{Long training horizons damp it.} On Lorenz-63 and Lorenz-96, training at longer horizons reduces the amplification, although not monotonically: it is largest for short but not one-step training horizons. On Rössler, the effect is weak.
 
-\paragraph{LM models behave like the fixed-horizon optimum.}
-The $g(T)$ curves of LM almost coincide with those of the fixed-horizon model at $T^*_{\mathrm{all}}$ on Lorenz-96 and Rössler. Training on a mixture of horizons around $T_{\mathrm{base}}$ thus leads to a loss landscape similar to that of training at a single horizon of similar length.
+\paragraph{LM behaves like the fixed-horizon optimum.}
+On Lorenz-96 and Rössler, the $g(T)$ curves of LM almost coincide with those of the fixed-horizon model at $T^*_{\mathrm{all}}$: training on a mixture of horizons around $T_{\mathrm{base}}$ leads to a similar loss landscape as training at a single horizon of similar length.
 
-Since $g(T)$ is measured at the final parameters, it characterizes the landscape around the solution found, not the difficulty along the training trajectory. Still, the results are consistent with the observation that long-horizon training needs more epochs to pay off (Section~\ref{sec:general-observations}): the longer the training horizon, the more of the amplification the model has to learn to control.
-
-\subsection{Lorenz-63}
-\label{sec:results-lorenz63}
-
-\input{tables/table_lorenz}
-
-Under an equal rollout-step budget, LM reduces the error over all validation horizons by 12-33\% relative to the best 20-epoch fixed-horizon model (Table~\ref{tab:results-lorenz}). At the first validation step, the picture reverses: LM is no better than the fixed-horizon optimum and is significantly worse at $\Delta t = 0.05$ (1.26). When both are trained for 200 epochs, LM stays within 10\% of the fixed horizon over all validation horizons. It is worse at $T_{\mathrm{val}}=1$, where the optimal fixed horizon is much shorter (see Section~\ref{sec:general-observations}). Lorenz-63 is the only system on which the FTLE-based assignment of horizons pays off. At $\Delta t = 0.08$ and $0.1$, randomly permuting the horizons (LMR) increases the error.
-LS is the weakest method, with 1.2-3.3 times the error of the fixed-horizon optimum. CV is 14-21\% worse than the fixed-horizon optimum over all validation horizons and 37-51\% worse at $T_{\mathrm{val}}=1$. It selects horizons of 7.5-10 steps, longer than $T^*_{\mathrm{all}}$ (Table~\ref{tab:cv-horizons}).
-
-\subsection{Rössler}
-\label{sec:results-rossler}
-
-\input{tables/table_rossler}
-
-In the Rössler system, no adaptive method improves on the fixed-horizon optimum (Table~\ref{tab:results-rossler}). The budget-matched LM is within 4\% of the 20-epoch optimum at $\Delta t = 0.05$ and is 7-14\% worse at the larger timesteps (significant at $\Delta t = 0.08$). After 200 epochs, LM is 3-4\% worse than the fixed-horizon optimum over all validation horizons. As on Lorenz-96, the permuted horizons are slightly better than the FTLE-based ones (LMR/LM 0.93-1.00, significant at $\Delta t = 0.05$ and $0.1$). For this system, however, the comparison is weak: with $T_{\mathrm{base}}$ clipped to the upper bound, both variants train almost exclusively at $T\in\{9,10\}$, so the assignment has little room to matter. LS diverges at $\Delta t = 0.05$ (23 times the reference error) and is within 4\% of the fixed-horizon optimum otherwise. CV behaves the same way: at $\Delta t = 0.05$, 16 of 20 seeds remain stuck at a smoothed validation MSE of about 0.19 throughout the curriculum, which yields 19 times the reference error. At $\Delta t = 0.08$ and $0.1$, CV is within 3-4\% of the fixed-horizon optimum in both scopes, although it wins on only 2-8 seeds; it selects $T = 10$ in the median, in agreement with $T^*_{\mathrm{all}}$.
-
-\paragraph{Problem complexity.}
-% TODO: Rossler too easy, add a section about the simplified model.
-
-\subsection{Lorenz-96}
-\label{sec:results-lorenz96}
-
-\input{tables/table_lorenz96}
-
-Lorenz-96 gives the clearest result for the budget-matched LM: it improves on the best 20-epoch fixed-horizon model at every timestep and in both scopes. The gain is 11-22\% over all validation horizons (18-20 of 20 seeds, $p<0.01$) and 5-11\% at $T_{\mathrm{val}}=1$ (Table~\ref{tab:results-lorenz96}). At equal training length (200 epochs), LM is consistently but only slightly worse than the oracle fixed horizon (3-10\% over all validation horizons, significant at every timestep). The FTLE ablation shows no benefit of the FTLE-based assignment: LMR is 3-6\% \emph{better} than LM over all validation horizons (significant at all three timesteps) and indistinguishable at $T_{\mathrm{val}}=1$. LS fails on this system, with 2.3-4.7 times the error of the fixed-horizon optimum and no winning seed. CV fails in the same way (2.2-4.6 times the reference error, no winning seed). For every seed, the smoothed validation MSE stays at 0.50-0.65 during the whole curriculum, so every stage ends after the minimum of five to seven epochs and the curriculum is complete after 50-52 epochs. The selected horizons (7-9 steps) are therefore not informative. The confidence intervals of LS and CV have almost zero width, i.e. all seeds converge to practically the same poor solution.
+Since $g(T)$ is measured at the final parameters, it describes the landscape around the solution, not the difficulty along the way. Still, it is consistent with the observation that long-horizon training needs more epochs to pay off (Section~\ref{sec:results-fixed}).
 
 \subsection{Long-Horizon Forecasts}
 \label{sec:long-horizon}
@@ -472,46 +469,53 @@ Lorenz-96 gives the clearest result for the budget-matched LM: it improves on th
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/vpt.pdf}
-  \caption{Valid prediction time (VPT) at the NRMSE threshold $\epsilon = 0.5$, in Lyapunov times, for the equal-budget comparison (left) and the comparison at 200 epochs (right). For each model, the VPT is averaged over all validation initial conditions; markers show the median over 20 seeds and bars the interquartile range. Rollouts are 100 steps long for Lorenz-63 and Lorenz-96 and 500 steps for Rössler; fewer than 2\% of the rollouts of any model remain below the threshold. Fixed-horizon models are shown at their MSE-selected horizon $T^*_{\mathrm{all}}$.}
+  \caption{Valid prediction time at $\epsilon = 0.5$ in Lyapunov times (median over seeds and interquartile range) under an equal budget (left) and at 200 epochs (right). Fixed-horizon models at $T^*_{\mathrm{all}}$. WL is not shown for Rössler.}
   \label{fig:vpt}
 \end{figure}
 
-All models are trained and selected on rollouts of at most ten steps. To test whether the differences persist beyond this window, every model was rolled out for 100 steps (500 for Rössler, whose slow divergence would otherwise leave most rollouts valid until the end) and its VPT was computed at $\epsilon = 0.5$ (Figure~\ref{fig:vpt}).
+All models are trained and selected on rollouts of at most ten steps. To test whether the differences persist beyond this window, every model was rolled out for 100 steps (500 for Rössler) and its VPT was computed (Figure~\ref{fig:vpt}).
 
-\paragraph{Equal budget.}
-On Lorenz-63, the budget-matched LM forecasts for 1.47-1.62 Lyapunov times, 32-40\% longer than the best 20-epoch fixed-horizon model (1.11-1.16) and even longer than the best 200-epoch fixed-horizon model. On Lorenz-96 the gain is 15-18\% (0.59-0.63 vs.\ 0.50-0.54 Lyapunov times). On Rössler, LM and the fixed-horizon model are within 0.05 Lyapunov times of each other. This matches the MSE results: the advantage of LM under an equal budget grows with the forecast horizon on the two Lorenz systems and is absent on Rössler.
+\paragraph{Fixed horizon.} On Lorenz-63, the VPT keeps increasing with the training horizon beyond $T^*_{\mathrm{all}}$: the ten-step MSE favors shorter horizons than long-term stability does. On Lorenz-96, the opposite happens at the larger timesteps: models trained at the longest horizons lose their forecast skill almost entirely, which suggests that 200 epochs are not enough for long-horizon training on this system.
 
-\paragraph{Equal training length.}
-At 200 epochs, LM reaches a longer VPT than the MSE-selected fixed-horizon model on Lorenz-63 (1.54-1.68 vs.\ 1.41-1.54 Lyapunov times), although its pooled MSE over ten steps is slightly higher at $\Delta t = 0.05$ and $0.08$. The reason is that the VPT of fixed-horizon models keeps increasing with the training horizon beyond $T^*_{\mathrm{all}}$, up to 1.56-1.75 Lyapunov times at $T = 8$-$10$: the ten-step MSE favors shorter horizons than long-term stability does, and LM is close to the fixed horizon that is best for the latter. On Lorenz-96 and Rössler, LM, LMR and the fixed-horizon optimum agree within 0.05 Lyapunov times. The collapsed LS and CV models (Lorenz-96 and Rössler at $\Delta t = 0.05$) lose their forecast skill after 0.1-0.3 Lyapunov times.
+\paragraph{LS and CV.} The collapsed models lose their forecast skill within a fraction of a Lyapunov time.
 
-\paragraph{Long training horizons on Lorenz-96.}
-Lorenz-96 is the only system where long fixed training horizons hurt long-term forecasts. At $\Delta t = 0.08$ and $0.1$, the VPT peaks at $T = 3$-$6$ (0.59 Lyapunov times) and drops to 0.08-0.22 at $T = 10$, i.e. to the level of a one-step model. The models trained at these horizons are poor already within the training window (about 2.3 times the optimal pooled MSE, Figure~\ref{fig:fixed-horizon-curves}), which suggests that 200 epochs are not enough for long-horizon training on this system. LM, which trains on horizons around $T_{\mathrm{base}} = 4$-$5$, avoids this regime.
+\paragraph{LM and LMR.} Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Lorenz-96 and Rössler, LM, LMR and the fixed-horizon optimum perform alike.
 
-\subsection{Summary Across Systems}
+\paragraph{WL.} WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error.
+% TODO: Rössler WL long-horizon runs incomplete (4/20 seeds at dt = 0.05, none at 0.08 and 0.1).
+
+\subsection{Summary Across Methods}
 \label{sec:summary}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_budget.pdf}
-  \caption{Equal-budget comparison: median validation MSE ($\times 10^{-3}$, normalized coordinates) of the best 20-epoch fixed-horizon model (at its cross-validated horizon $T^*$) and of LM trained with the rollout-step budget of the full 20-epoch sweep, for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). The color shows the MSE relative to the lower of the two values in the same column (log scale, saturating at 4); the better value is set in bold. Confidence intervals and significance tests are given in Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96}.}
+  \caption{Equal budget: median MSE ($\times 10^{-3}$) of the best 20-epoch fixed-horizon model and of budget-based LM, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom). Color: MSE relative to the best value in the column; bold: best.}
   \label{fig:mse-heatmap-budget}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_200.pdf}
-  \caption{Comparison at equal training length (200 epochs): median validation MSE ($\times 10^{-3}$, normalized coordinates) of the best fixed-horizon model (at its cross-validated horizon $T^*$) and of the adaptive methods LM, LMR, LS and CV, for every system and timestep, at the first validation step (top) and pooled over all validation horizons (bottom). The color shows the MSE relative to the lowest value in the same column (log scale, saturating at 4); the best value is set in bold. Confidence intervals and significance tests are given in Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96}.}
+  \caption{200 epochs: median MSE ($\times 10^{-3}$) of the best fixed-horizon model and of all adaptive methods, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom). Color: MSE relative to the best value in the column; bold: best.}
   \label{fig:mse-heatmap-200}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/method_curves.pdf}
-  \caption{Median validation MSE over 20 seeds as a function of the validation horizon $T_{\mathrm{val}}$ (error averaged over the first $T_{\mathrm{val}}$ rollout steps; log scale, shared within a row) for every method, system and timestep. Fixed-horizon models are shown at their cross-validated horizon $T^*_{\mathrm{all}}$ (dashed). On Lorenz-96 and on Rössler at $\Delta t = 0.05$, the LS and CV curves lie on top of each other, since both methods collapse to the same solution.}
+  \caption{Median validation MSE vs.\ validation horizon $T_{\mathrm{val}}$ for every method. Fixed-horizon models at $T^*_{\mathrm{all}}$ (dashed).}
   \label{fig:method-curves}
 \end{figure}
 
-Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three tables for the two training regimes, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. The collapse of LS and CV is visible as curves that start up to an order of magnitude above the others and saturate at long validation horizons. Elsewhere, the curves of the adaptive methods stay close to the fixed-horizon optimum. The advantage of the budget-matched LM over the 20-epoch fixed-horizon models grows with $T_{\mathrm{val}}$ on Lorenz-63 and Lorenz-96, i.e. it comes mainly from more stable long rollouts. LM trained with the rollout budget of a fixed-horizon sweep matches or beats the best fixed-horizon model of that sweep on both systems with $\hat\lambda_{\max} \approx 1$, but not on Rössler. At equal training length, LM is within roughly 10\% of an oracle choice of the fixed horizon over all validation horizons in all systems. The two curriculum-based methods, LS and CV, are the least reliable: both collapse on Lorenz-96 and on Rössler at $\Delta t = 0.05$. Where CV trains successfully, it is close to the fixed-horizon optimum on Rössler but 14-21\% worse on Lorenz-63, and it systematically selects horizons longer than $T^*_{\mathrm{all}}$. Its online selection does not replace the grid search. Assigning horizons by the local FTLE gives a measurable advantage only on Lorenz-63 at short validation horizons. Elsewhere, randomly permuted horizons perform as well or slightly better. This indicates that most of LM's benefit comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
+Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three result tables, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. In short:
+\begin{itemize}
+    \item \textbf{Fixed horizon:} the optimal horizon depends on the training budget and on the evaluation scope, so it must be searched for again whenever either changes.
+    \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Lorenz-96 and on Rössler at the smallest timestep. CV systematically selects too long horizons.
+    \item \textbf{LM:} under an equal budget, it matches or beats the best fixed-horizon model on both Lorenz systems, with the gain growing along the rollout. At equal training length, it stays close to an oracle choice of the fixed horizon.
+    \item \textbf{LMR:} the FTLE-based assignment helps only on Lorenz-63; the main benefit of LM comes from the choice of the mean horizon.
+    \item \textbf{WL:} worse than both the fixed-horizon optimum and LM everywhere.
+\end{itemize}
 
 \paragraph{In short (TODO).} Adaptive techniques show advantage over the fixed baseline when given approximation problem is constrained either by its complexity or limited amount of computation.
 

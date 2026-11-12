@@ -1,6 +1,6 @@
 \begin{table}[p]
   \centering
-  \caption{Lorenz-63: validation MSE ($\times 10^{-3}$, median $\pm$ standard deviation) at $T_{\mathrm{val}}=1$ and pooled over all validation horizons. Bold: lowest median within a training regime. Wins: number of seeds on which the method beats the fixed model with the cross-validated horizon $T^*$ of the same regime. \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$, two-sided exact sign test, Holm-corrected within each $\Delta t$ and scope. $T^*$ is given as $T^*_1/T^*_{\mathrm{all}}$.}
+  \caption{Lorenz-63: median validation MSE ($\times 10^{-3}$, $\pm$ std over seeds). Wins: seeds beating the fixed model at $T^*$ of the same regime; \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$ (Holm-corrected sign test). $T^*$ given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$; bold: best per regime.}
   \label{tab:results-lorenz}
   \small
   \begin{tabular}{l cc cc}
@@ -20,6 +20,7 @@
     \quad LS & $4.87^{\pm 0.995}$ & 6/20 & $7.83^{\pm 1.03}$ & 5/20 \\
     \quad CV & $4.99^{\pm 1.22}$ & 6/20 & $7.59^{\pm 1.16}$ & 5/20 \\
     \quad WL & $4.60^{\pm 0.738}$ & 6/20 & $7.76^{\pm 1.59}$ & 2/20\textsuperscript{\textdaggerdbl} \\
+    \quad LMR vs.\ LM & -- & 9/20 & -- & 10/20 \\
     \midrule
     \multicolumn{5}{l}{$\Delta t = 0.08$} \\
     \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
@@ -32,6 +33,7 @@
     \quad LS & $6.34^{\pm 1.04}$ & 1/20\textsuperscript{\textdaggerdbl} & $10.8^{\pm 4.49}$ & 3/20\textsuperscript{\textdagger} \\
     \quad CV & $3.91^{\pm 1.21}$ & 4/20\textsuperscript{\textdagger} & $7.04^{\pm 1.69}$ & 7/20 \\
     \quad WL & $3.53^{\pm 0.910}$ & 2/20\textsuperscript{\textdaggerdbl} & $8.89^{\pm 4.58}$ & 1/20\textsuperscript{\textdaggerdbl} \\
+    \quad LMR vs.\ LM & -- & 5/20 & -- & 7/20 \\
     \midrule
     \multicolumn{5}{l}{$\Delta t = 0.1$} \\
     \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
@@ -44,6 +46,7 @@
     \quad LS & $9.43^{\pm 3.76}$ & 0/20\textsuperscript{\textdaggerdbl} & $22.5^{\pm 37.6}$ & 1/20\textsuperscript{\textdaggerdbl} \\
     \quad CV & $4.27^{\pm 3.01}$ & 4/20\textsuperscript{\textdagger} & $10.2^{\pm 20.9}$ & 8/20 \\
     \quad WL & $3.03^{\pm 0.662}$ & 4/20\textsuperscript{\textdagger} & $12.7^{\pm 15.4}$ & 3/20\textsuperscript{\textdagger} \\
+    \quad LMR vs.\ LM & -- & 3/20\textsuperscript{\textdagger} & -- & 6/20 \\
     \bottomrule
   \end{tabular}
 \end{table}
