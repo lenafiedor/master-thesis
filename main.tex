@@ -59,7 +59,7 @@ The main contributions of this paper are as follows.
 
 \begin{enumerate}
     \item A formulation of adaptive temporal horizon selection for neural forecasting of chaotic dynamical systems.
-    \item An implementation of four different training framework for adaptive horizon neural forecasting models: a linear scheduler, an online cross-validation, a Lyapunov-mean horizon, and an FTLE-weighted loss (see Appendix~\ref{app:weighted-loss}).
+    \item An implementation of four different training framework for adaptive horizon neural forecasting models: a linear scheduler, an online cross-validation, a Lyapunov-mean horizon, and an FTLE-weighted loss.
     \item An empirical evaluation on benchmark chaotic systems, including the Lorenz-63, Lorenz-96 and Rössler systems.
 \end{enumerate}
 
@@ -352,6 +352,15 @@ The LM models differ from fixed-horizon training in two ways: they expose the mo
 
 where $S_N$ denotes the set of permutations of the sample indices. The permutation $\pi$ is drawn once per model, seeded with the model's training seed, and kept constant throughout training. Because a permutation preserves the multiset $\{T_m\}_m$, LMR models see exactly the same distribution of horizons as LM models, with the same mean, variance and range, and therefore the same number of rollout steps per epoch. The only property removed is the correspondence between a sample's FTLE $\Lambda_m$ and its assigned horizon. Consequently, if LM models outperform LMR models, the improvement can be attributed to the FTLE-informed assignment of horizons. If the two perform comparably, the benefit of LM comes mainly from training on a mixture of rollout lengths.
 
+\subsection{FTLE-Weighted Loss}
+\label{sec:wl}
+
+LM uses the local FTLE to decide \emph{how far} each sample is rolled out. The \textbf{FTLE-weighted loss (WL)} uses it instead to decide \emph{how much each rollout step counts}. All samples are rolled out for the same horizon, the Lyapunov-based base horizon $T_{\mathrm{base}}$ (Eq.~\eqref{eq:t-base}), but the error at each step is weighted.
+
+The idea is that, after $j$ steps, a sample whose initial state has a large FTLE has already used up more of its predictability than a sample in a stable region. For every sample and step, WL therefore estimates how many Lyapunov times have elapsed, i.e. the FTLE of the initial state times the elapsed time $j\,\Delta t$. Steps within the predictable range keep full weight; beyond it, the weight decreases smoothly towards a small minimum, so late steps never drop out of the loss completely. In addition, the one-step error is always included with a fixed weight, which anchors the model to accurate local dynamics.
+
+As a result, samples from stable regions are trained on the whole rollout, while samples from unstable regions are trained mainly on their first few steps. The exact formulation and parameter values are given in Appendix~\ref{app:weighted-loss}.
+
 \newpage
 
 \section{Results}
@@ -450,7 +459,7 @@ Assigning horizons by the local FTLE helps only on Lorenz-63, where randomly per
 \subsection{Weighted Loss}
 \label{sec:results-wl}
 
-WL trains at the fixed horizon $T_{\mathrm{base}}$ and down-weights the later rollout steps of locally unstable samples (Appendix~\ref{app:weighted-loss}).
+WL trains at the fixed horizon $T_{\mathrm{base}}$ and down-weights the later rollout steps of locally unstable samples (Section~\ref{sec:wl}).
 
 It does not improve on the fixed-horizon optimum on any system or timestep, and the difference is significant over the full validation window in every configuration. It is also worse than LM everywhere, although both train around the same base horizon. Down-weighting the late rollout steps of locally unstable samples removes part of the training signal that makes multi-step training useful, without a gain in short-term accuracy.
 
@@ -558,6 +567,8 @@ SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget
 
 \subsection{Weighted Loss with Finite-Time Lyapunov Exponents}
 \label{app:weighted-loss}
+
+This section gives the full formulation of the FTLE-weighted loss introduced in Section~\ref{sec:wl}.
 
 To further improve the performance of the system by measuring how nearby trajectories diverge at a certain point on the trajectory, we introduced the idea of soft-weighted loss over a fixed rollout horizon. The horizon is the Lyapunov-based base horizon $T_{\mathrm{base}}$ from Eq.~\eqref{eq:t-base}, and the FTLE window equals this horizon, $W = T_{\mathrm{base}}$.
 
