@@ -481,7 +481,7 @@ Since $g(T)$ is measured at the final parameters, it describes the landscape aro
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/vpt.pdf}
-  \caption{Valid prediction time at $\epsilon = 0.5$ in Lyapunov times (median over seeds and interquartile range) under an equal budget (left) and at 200 epochs (right). Fixed-horizon models at $T^*_{\mathrm{all}}$. WL is not shown for Rössler.}
+  \caption{Valid prediction time at $\epsilon = 0.5$ in Lyapunov times (median over seeds and interquartile range) under an equal budget (left) and at 200 epochs (right). Fixed-horizon models at $T^*_{\mathrm{all}}$.}
   \label{fig:vpt}
 \end{figure}
 
@@ -493,8 +493,7 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 
 \paragraph{LM and LMR.} Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Lorenz-96 and Rössler, LM, LMR and the fixed-horizon optimum perform alike.
 
-\paragraph{WL.} WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error.
-% TODO: Rössler WL long-horizon runs incomplete (4/20 seeds at dt = 0.05, none at 0.08 and 0.1).
+\paragraph{WL.} On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error. On Rössler, it forecasts about as long as the other methods.
 
 \subsection{Summary Across Methods}
 \label{sec:summary}
