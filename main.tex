@@ -359,11 +359,11 @@ where $S_N$ denotes the set of permutations of the sample indices. The permutati
 \subsection{Reporting Conventions}
 \label{sec:reporting}
 
-All models are evaluated on the validation split at the horizons $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
+All models are evaluated on the validation split at $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
 
 Each method is compared with the best fixed-horizon model of the same training regime: budget-based LM with fixed-horizon models trained for 20 epochs, and all other methods with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
 
-Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. Results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
+Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. The results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
 
 The following subsections go through the methods in the order in which they were introduced.
 
@@ -391,10 +391,10 @@ Fixed-horizon models are trained at a single horizon $T \in \{1, \dots, 10\}$ fo
 \end{figure}
 
 \paragraph{The optimal horizon depends on the training budget.}
-With longer training, the optimal horizon moves to longer rollouts in almost every configuration (Table~\ref{tab:horizons}, Figure~\ref{fig:optimal-horizon-budget}). After 20 epochs, the error rises steeply beyond $T^*$; after 200 epochs, this rise is much flatter (Figure~\ref{fig:fixed-horizon-curves}). Long-horizon training needs more time to pay off. A horizon found with a cheap search therefore does not transfer to a longer training run: training for 200 epochs at the 20-epoch optimum gives a noticeably higher error than at the 200-epoch optimum. The optimal horizon is thus a property of the system \emph{and} of the available compute, which motivates choosing it during training rather than by a separate grid search.
+With longer training, the optimal horizon moves to longer rollouts in almost every configuration (Table~\ref{tab:horizons}, Figure~\ref{fig:optimal-horizon-budget}). After 20 epochs, the error increases steeply beyond $T^*$; after 200 epochs, this rise is much flatter (Figure~\ref{fig:fixed-horizon-curves}). Long-horizon training needs more time to pay off. A horizon found with a cheap search therefore does not transfer to a longer training run: training for 200 epochs at the 20-epoch optimum gives a noticeably higher error than at the 200-epoch optimum. The optimal horizon is thus a property of the system \emph{and} of the available compute, which motivates choosing it during training rather than by a separate grid search.
 
 \paragraph{The optimal horizon depends on what is evaluated.}
-The best horizon for one-step accuracy is consistently shorter than the best horizon for the pooled error, so no single training horizon is optimal for both. The one-step optimum is also poorly determined: it varies widely between seeds and does not stabilize with longer training.
+The best horizon for one-step accuracy is consistently shorter than the best horizon for pooled error, so no single training horizon is optimal for both. The one-step optimum is also poorly determined: it varies widely between seeds and does not stabilize with longer training.
 
 \paragraph{Rössler.}
 For Rössler, the error keeps decreasing up to the longest tested horizon, so the optimum lies at the boundary of the search range.
