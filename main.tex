@@ -256,7 +256,7 @@ Based on cross-validation performance, we report two horizon values for which th
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/validation_curves.pdf}
-    \caption{Cross-validation curves of fixed-horizon models trained for 200 epochs, for every system (rows) and timestep (columns). The x-axis shows the training horizon $T$ and the y-axis the median validation MSE over 20 seeds (normalized coordinates, log scale; the y-axis is shared within a row). Each line corresponds to one validation horizon $T_{\mathrm{val}}$, with the error averaged over the first $T_{\mathrm{val}}$ rollout steps; the enlarged marker on each line indicates the training horizon with the lowest error for that $T_{\mathrm{val}}$.}
+    \caption{Cross-validation curves of fixed-horizon models trained for 200 epochs, for every system (rows) and timestep (columns). The x-axis shows the training horizon $T$ and the y-axis the median validation MSE over 20 seeds (normalized coordinates, log scale). Each line corresponds to one validation horizon $T_{\mathrm{val}}$, with the error averaged over $T_{\mathrm{val}}$ rollout steps; the enlarged marker on each line indicates the training horizon with the lowest error for that $T_{\mathrm{val}}$.}
     \label{fig:validation-curves}
 \end{figure}
 
@@ -501,14 +501,14 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_budget.pdf}
-  \caption{Equal budget: median MSE ($\times 10^{-3}$) of the best 20-epoch fixed-horizon model and of budget-based LM, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom). Color: MSE relative to the best value in the column; bold: best.}
+  \caption{Equal budget: median MSE ($\times 10^{-3}$) of the best 20-epoch fixed-horizon model and of budget-based LM, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom); bold: best.}
   \label{fig:mse-heatmap-budget}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_200.pdf}
-  \caption{200 epochs: median MSE ($\times 10^{-3}$) of the best fixed-horizon model and of all adaptive methods, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom). Color: MSE relative to the best value in the column; bold: best.}
+  \caption{200 epochs: median MSE ($\times 10^{-3}$) of the best fixed-horizon model and of all adaptive methods, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom); bold: best.}
   \label{fig:mse-heatmap-200}
 \end{figure}
 
