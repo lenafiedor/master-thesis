@@ -52,9 +52,11 @@ Forecasting models are usually trained on one step predictions \cite{aceituno_te
 
 Finding an optimal prediction horizon is a computationally demanding task. Treating the horizon optimization problem as a function of computational resources, we propose replacing the grid search for the horizon parameter with one adaptive model.
 
-Furthermore, we ask whether adapting the prediction horizon to the local dynamics of the system can provide a suitable training signal for neural forecasting models. We extend our theory by mapping the local predictability of the trajectory, measured in finite-time Lyapunov exponents (FTLEs), to the temporal horizon.
+Furthermore, we ask whether adapting the prediction horizon to the local dynamics of the system can provide a suitable training signal for neural forecasting models. We extend our theory by mapping the local predictability of the trajectory, measured in finite-time Lyapunov exponents (FTLEs), to the temporal horizon. % -> contributions
 
 \subsection{Contributions}
+
+% What we're trying to do, in general
 
 The main contributions of this paper are as follows.
 
@@ -401,14 +403,15 @@ Fixed-horizon models are trained at a single horizon $T \in \{1, \dots, 10\}$ fo
 \end{figure}
 
 \paragraph{The optimal horizon depends on the training budget.}
-With longer training, the optimal horizon moves to longer rollouts in almost every configuration (Table~\ref{tab:horizons}, Figure~\ref{fig:optimal-horizon-budget}). After 20 epochs, the error increases steeply beyond $T^*$; after 200 epochs, this rise is much flatter (Figure~\ref{fig:fixed-horizon-curves}). Long-horizon training needs more time to pay off. A horizon found with a cheap search therefore does not transfer to a longer training run: training for 200 epochs at the 20-epoch optimum gives a noticeably higher error than at the 200-epoch optimum. The optimal horizon is thus a property of the system \emph{and} of the available compute, which motivates choosing it during training rather than by a separate grid search.
+With longer training, the optimal horizon moves to longer rollouts in almost every configuration (Table~\ref{tab:horizons}, Figure~\ref{fig:optimal-horizon-budget}). After 20 epochs, the error increases steeply beyond $T^*$; after 200 epochs, this rise is much flatter (Figure~\ref{fig:fixed-horizon-curves}). Long-horizon training needs more time to pay off. A horizon found with a cheap search therefore does not transfer to a longer training run: training for 200 epochs at the 20-epoch optimum gives a noticeably higher error than at the 200-epoch optimum. The optimal horizon is thus a property of the system and of the available compute, which motivates choosing it during training rather than by a separate grid search.
 
 \paragraph{The optimal horizon depends on what is evaluated.}
 The best horizon for one-step accuracy is consistently shorter than the best horizon for pooled error, so no single training horizon is optimal for both. The one-step optimum is also poorly determined: it varies widely between seeds and does not stabilize with longer training.
 
 \paragraph{Rössler.}
-For Rössler, the error keeps decreasing up to the longest tested horizon, so the optimum lies at the boundary of the search range.
-% TODO: Rossler too easy, add a section about the simplified model.
+For Rössler, the error keeps decreasing up to the longest tested horizon, so the optimum lies at the boundary of the search range. As the cross-validation results show, the MSE does not vary a lot for $T_{\mathrm{val}} \in 5, \dots, 10$ and the optimal horizons are non-informative. The low variation stems from the fact that the forecasting task is too easy in the case of the Rössler system. Therefore, we decided to % TODO - finish
+
+Since we wanted to keep the set of validation horizons consistent across all systems, we decided to increase the task difficulty by using a simplified neural network architecture with two hodden layers of 5 neurons instead of three hidden layers of 10 neurons that we use in both Lorenz systems.
 
 \subsection{Linear Horizon Scheduler}
 \label{sec:results-ls}
@@ -541,8 +544,19 @@ Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the 
 \paragraph{Advantage of adaptive methods.}
 Adaptive techniques show advantage over the fixed baseline when a given approximation problem is constrained by either its complexity or limited amount of computation.
 
-\section{Conclusion (TODO)}
+\section{Conclusion}
 
+We demonstrated the advantages of an adaptive approach in finding optimal temporal horizons for chaotic dynamical series forecasting. First, we show that this optimum depends on the task considered and the available compute budget. Treating optimal horizons as the function of computational resources, we developed an algorithm to find a good forecasting horizon without training and validating a set of fixed models, but relying solely on the estimate of the system's maximal Lyapunov exponent. Horizons that this method yield overlap to a large extent with the horizons chosen by cross-validation of the fixed models, which represent the commonly used approach and form our baseline.
+
+We also tried to incorporate the information about local instability into training, by mapping finite-time Lyapunov exponents to sample-wise horizons. However, this approach did not show any improvement in the dynamical systems considered, giving similar results to its variant with randomized mapping.
+
+\section{Future Work}
+
+In the future, we would like to extend the idea of Lyapunov-based horizon search by further investigating why the FTLE-to-horizon mapping does not improve the forecasting and what could be a possible replacement for FTLEs in the sample-wise horizon assignment.
+
+In terms of MLE-informed horizon calculation, a possible extension could investigate where the empirically found Lyapunov fraction parameter $\gamma$ comes from and replace the hard-coded value with an adaptive mechanism. In the current implementation of base horizon, there is no notion of neither the computational budget nor the goal validation horizon, so it is task- and budget-agnostic.
+
+A good idea would be to try benchmarking the LM method on real-world datasets or discrete chaotic systems. Here comes the advantage of FTLE-based mapping, as when we are dealing with real data and not synthetic systems with its governing equations, FTLEs can still be calculated with ease while LLE calculation would take additional steps.
 
 \clearpage
 \bibliographystyle{plain}
@@ -559,9 +573,9 @@ Adaptive techniques show advantage over the fixed baseline when a given approxim
 
 Tables~\ref{tab:nrmse} and~\ref{tab:smape} repeat the pooled comparison of Section~\ref{sec:summary} with NRMSE and SMAPE instead of MSE. The fixed-horizon references are kept at the MSE-selected $T^*_{\mathrm{all}}$, so the tables test whether the conclusions depend on the error measure, not whether another horizon would be optimal for it.
 
-The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum and better than it on Lorenz-63 at $\Delta t = 0.1$, and the collapse of LS and CV on Lorenz-96 and on Rössler at $\Delta t = 0.05$ is equally visible.
+The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum. The collapse of LS and CV on Lorenz-96 and on Rössler at $\Delta t = 0.05$ is equally visible.
 
-SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. The differences are below 0.5 percentage points. SMAPE is large for Lorenz-96 and Rössler (31-92\%) because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
+SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. SMAPE is large for Lorenz-96 and Rössler because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
 
 \section{Methods Description}
 \label{app:method-description}
