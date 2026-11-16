@@ -1,0 +1,52 @@
+\begin{table}[p]
+  \centering
+  \caption{Rössler (5$\times$5 MLP): median validation MSE ($\times 10^{-3}$, $\pm$ std over seeds). Wins: seeds beating the fixed model at $T^*$ of the same regime; \textdagger/\textdaggerdbl: $p<0.05$/$p<0.01$ (Holm-corrected sign test). $T^*$ given as $T^*_{T_{\mathrm{val}}=1}/T^*_{\mathrm{all}}$; bold: best per regime.}
+  \label{tab:results-rossler_small}
+  \small
+  \begin{tabular}{l cc cc}
+    \toprule
+    & \multicolumn{2}{c}{$T_{\mathrm{val}}=1$} & \multicolumn{2}{c}{All $T_{\mathrm{val}}$} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    Method & MSE & Wins & MSE & Wins \\
+    \midrule
+    \multicolumn{5}{l}{$\Delta t = 0.05$} \\
+    \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
+    \quad Fixed ($T^*=6/7$) & $3.22^{\pm 3.74}$ & -- & $8.78^{\pm 6.73}$ & -- \\
+    \quad LM (equal budget) & $\mathbf{2.22}^{\pm 1.21}$ & 13/20 & $\mathbf{6.41}^{\pm 2.92}$ & 15/20 \\
+    \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
+    \quad Fixed ($T^*=5/10$) & $\mathbf{2.07}^{\pm 1.64}$ & -- & $\mathbf{6.42}^{\pm 2.78}$ & -- \\
+    \quad LM & $2.23^{\pm 1.31}$ & 6/20 & $6.49^{\pm 2.55}$ & 7/20 \\
+    \quad LMR & $2.24^{\pm 2.88}$ & 7/20 & $6.49^{\pm 3.54}$ & 8/20 \\
+    \quad LS & $20.6^{\pm 0.241}$ & 0/20\textsuperscript{\textdaggerdbl} & $127^{\pm 0.347}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad CV & $20.5^{\pm 4.14}$ & 0/20\textsuperscript{\textdaggerdbl} & $117^{\pm 27.1}$ & 0/20\textsuperscript{\textdaggerdbl} \\
+    \quad WL & $3.70^{\pm 4.39}$ & 4/20 & $10.6^{\pm 8.56}$ & 2/20\textsuperscript{\textdaggerdbl} \\
+    \quad LMR vs.\ LM & -- & 13/20 & -- & 13/20 \\
+    \midrule
+    \multicolumn{5}{l}{$\Delta t = 0.08$} \\
+    \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
+    \quad Fixed ($T^*=4/5$) & $\mathbf{4.20}^{\pm 3.44}$ & -- & $9.05^{\pm 5.96}$ & -- \\
+    \quad LM (equal budget) & $4.37^{\pm 6.38}$ & 10/20 & $\mathbf{7.73}^{\pm 7.57}$ & 15/20 \\
+    \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
+    \quad Fixed ($T^*=10/8$) & $\mathbf{3.53}^{\pm 2.44}$ & -- & $\mathbf{6.83}^{\pm 1.99}$ & -- \\
+    \quad LM & $3.71^{\pm 1.27}$ & 5/20 & $7.45^{\pm 2.69}$ & 4/20 \\
+    \quad LMR & $3.54^{\pm 2.19}$ & 9/20 & $6.85^{\pm 3.25}$ & 9/20 \\
+    \quad LS & $5.23^{\pm 18.2}$ & 4/20 & $11.0^{\pm 48.4}$ & 5/20 \\
+    \quad CV & $4.92^{\pm 16.5}$ & 4/20 & $9.78^{\pm 47.7}$ & 4/20 \\
+    \quad WL & $4.29^{\pm 1.75}$ & 5/20 & $8.39^{\pm 4.64}$ & 2/20\textsuperscript{\textdaggerdbl} \\
+    \quad LMR vs.\ LM & -- & 17/20\textsuperscript{\textdagger} & -- & 16/20 \\
+    \midrule
+    \multicolumn{5}{l}{$\Delta t = 0.1$} \\
+    \multicolumn{5}{l}{\quad\textit{20 epochs / equal rollout budget}} \\
+    \quad Fixed ($T^*=2/4$) & $5.42^{\pm 4.95}$ & -- & $9.83^{\pm 6.44}$ & -- \\
+    \quad LM (equal budget) & $\mathbf{5.16}^{\pm 3.81}$ & 11/20 & $\mathbf{8.44}^{\pm 5.68}$ & 14/20 \\
+    \multicolumn{5}{l}{\quad\textit{200 epochs}} \\
+    \quad Fixed ($T^*=10/10$) & $\mathbf{4.95}^{\pm 10.4}$ & -- & $\mathbf{7.84}^{\pm 9.44}$ & -- \\
+    \quad LM & $5.08^{\pm 1.62}$ & 4/20 & $7.94^{\pm 2.46}$ & 4/20 \\
+    \quad LMR & $4.98^{\pm 4.37}$ & 7/20 & $8.23^{\pm 10.7}$ & 6/20 \\
+    \quad LS & $5.09^{\pm 27.8}$ & 3/20\textsuperscript{\textdagger} & $8.79^{\pm 41.8}$ & 4/20 \\
+    \quad CV & $5.04^{\pm 4.65}$ & 8/20 & $8.70^{\pm 7.87}$ & 8/20 \\
+    \quad WL & $5.81^{\pm 1.72}$ & 3/20\textsuperscript{\textdagger} & $9.74^{\pm 3.84}$ & 3/20\textsuperscript{\textdagger} \\
+    \quad LMR vs.\ LM & -- & 14/20 & -- & 14/20 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
