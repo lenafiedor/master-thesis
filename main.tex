@@ -16,21 +16,13 @@
 
 \section{Abstract}
 
-Forecasting chaotic dynamical systems is challenging because small differences in initial conditions can grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the prediction horizon is therefore a central design choice: short horizons may lead to accurate but limited predictions, while long horizon predictions can be dominated by divergence and accumulated error. There exists a gap in the literature, as most forecasting set-ups use fixed prediction horizons, even though the optimal prediction time is specific to the considered dynamical system and depends on its divergence rate. Furthermore, predictability of chaotic trajectories may vary across different regions of the state space and should also be considered when constructing training samples.
+Forecasting chaotic dynamical systems is challenging because small differences in initial conditions grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the training horizon is therefore a central design choice: short horizons give accurate one-step models that do not learn how their errors compound, while long horizons force the model to fit targets dominated by divergence. Most forecasting setups train on single-step predictions, and when longer horizons are used, the horizon is chosen by an expensive grid search over fixed-horizon models. We show that the outcome of this search is not a property of the system alone: the optimal horizon shifts with the training budget, so it does not transfer between setups.
 
-We investigate the adaptive temporal horizon for neural forecasting of chaotic dynamical systems. Instead of training only with a fixed prediction time, we calculate the optimal prediction horizon using the maximal Lyapunov exponent of the system and further adjust it on the sample level based on the local instability rate.
+We propose setting the training horizon from the maximal Lyapunov exponent of the system, further adjusted per sample according to the local instability measured by finite-time Lyapunov exponents. We compare this approach with a fixed-horizon models on the Lorenz-63, Lorenz-96 and Rössler systems, treating the horizon optimization as a function of available computational resources.
 
-We argue that with limited amount of computational resources it is better to use our adaptive method than to perform a grid search on the horizon parameter in order to find the optimum. The methods are evaluated on the Lorenz-63, Lorenz-96, and Rössler systems and compared against fixed-horizon baselines.
+Under an equal budget, the Lyapunov-based horizon matches or outperforms the best model of the grid search on both Lorenz systems and on a capacity-limited Rössler setup, and it extends the valid prediction time. With longer training, the gap to the best fixed-horizon model closes, and no method improves on the baseline when the task is easy enough for every fixed horizon to solve it. Most of the benefit comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise assignment.
 
-% \begin{enumerate}
-%     \item Using a simple linear scheduler (LS),
-%     \item Performing an online cross-validation over a horizon curriculum (CV),
-%     \item Mapping from the local predictability properties of the trajectory, measured by finite-time Lyapunov exponents (LM), together with a randomized ablation (LMR).
-% \end{enumerate}
-
-Our results show that the adaptive horizon method outperforms the fixed grid search under the same computational budget, or when the problem considered poses a forecasting difficulty (?). This difference shrinks when we compare locally the best fixed model with the adaptive model, both trained under the same budget. Most of the benefit of our adaptive method comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise horizon assignment.
-
-Overall, we demonstrate that treating the prediction horizon as an adaptive component, rather than a fixed experimental parameter, is a promising direction for improving neural forecasting in chaotic dynamical systems.
+Overall, the results suggest that deriving the training horizon from the dynamics of the system is a cheap and effective alternative to grid search when compute or model capacity is limited and that treating the prediction horizon as an adaptive component is a promising direction for improving neural forecasting in chaotic dynamical systems.
 
 \newpage
 
@@ -41,29 +33,31 @@ Overall, we demonstrate that treating the prediction horizon as an adaptive comp
 
 \subsection{Motivation}
 
-Many systems in science and engineering evolve according to deterministic laws, yet their long-term behavior can be extremely difficult to predict. Chaotic dynamical systems are a central example of this tension: even when the governing equations are known, small differences in initial conditions can grow rapidly and lead to diverging trajectories. The difficulty of the prediction strongly depends on the temporal horizon. Short-term predictions may remain close to the true trajectory, whereas longer-term predictions accumulate errors and eventually become unreliable \cite{aceituno_temporal_2025}.
-Recent work in the field demonstrates the benefits of adapting temporal decisions to the forecasting context \cite{pan_leapts_2026, zhang_elastst_2024}. Optimal prediction horizon depends on the uncertainty rate of the system, as well as model parameters, e.g. chosen timestep. The global horizon may also not reflect how predictability varies across different regions of the state space. 
+Forecasting chaotic dynamical systems is an important, yet difficult task, as many systems across different scientific domains exhibit nonlinear, chaotic behavior. Examples include the atmosphere and climate \cite{lorenz_deterministic_1963, bauer_quiet_2015}, fluid turbulence, population dynamics in ecology \cite{may_simple_1976}, and electrical activity in neural and cardiac tissue \cite{strogatz_nonlinear_1994}. In these systems, small differences in initial conditions can grow rapidly and lead to divergent trajectories. Existing work focuses mainly on one-step predictions that do not capture long-term chaotic behaviors \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Understanding how these systems evolve on a longer timescale is crucial; therefore, we focus on the \emph{temporal horizon} aspect, meaning how far in the future is the model trained to predict.
 
-This paper investigates the adaptive temporal horizon as a solution to the problems mentioned above. We argue that instead of performing a computationally expensive grid search for an optimal horizon parameter, this process can be automatized by training the model with variable horizon and taking into account the local predictability of the system.
+The difficulty of the prediction task strongly depends on the rollout length. Short-term predictions may remain close to the true trajectory, whereas longer-term predictions accumulate errors and eventually become unreliable \cite{aceituno_temporal_2025}. The training horizon therefore shapes what the model learns: if it is too short, the model never observes how its errors compound; if it is too long, the model is asked to fit targets that are essentially unpredictable. Recent work demonstrates the benefits of adapting temporal decisions to the forecasting context \cite{pan_leapts_2026, zhang_elastst_2024}.
+
+In practice, the training horizon is usually chosen by grid search: a number of fixed-horizon models are trained and cross-validated, and the one with the lowest error over a set of evaluation horizons $T_{\mathrm{val}}$ is selected. To our knowledge, there is no principled way to determine this optimum from the intrinsic properties of the system rather than empirically. We address this gap by relating the training horizon to the maximal Lyapunov exponent of the system and, at a finer scale, to its local predictability.
 
 \subsection{Problem Statement}
 
-Forecasting models are usually trained on one step predictions \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Although this approach provides a clear learning objective, it also assumes that the arbitrarily chosen horizon parameter is able to capture well the local dynamics and is equally appropriate throughout the trajectory. This assumption is restrictive for chaotic dynamical systems, where local rates of divergence can vary substantially over the state space. They may also not have a fixed periodicity, meaning that the arbitrarily chosen horizon $k$ does not capture well the behavior of errors of some other periodicity, for example $\frac{k+1}{2}$ \cite{zhuang_horizon_2025}. As a result, some regions may remain predictable over relatively long horizons, while others may become unreliable much sooner.
+We identify two limitations of training with a single, fixed horizon.
 
-Finding an optimal prediction horizon is a computationally demanding task. Treating the horizon optimization problem as a function of computational resources, we propose replacing the grid search for the horizon parameter with one adaptive model.
+\paragraph{Choosing the horizon without a grid search.}
+The optimal training horizon $T_{\mathrm{opt}}$ is not a property of the system alone. It depends on the rate of error growth in the system, on modeling choices such as the sampling timestep and the model capacity, and on the task: the available computational budget and the evaluation horizons $T_{\mathrm{val}}$ over which the model is expected to forecast. Changing any of these can shift $T_{\mathrm{opt}}$ (Section~\ref{sec:budget-based}), so a horizon selected for one setup does not transfer to another, and the search has to be repeated. Each search trains one model per candidate horizon, so its cost grows linearly with the size of the grid, while only one of the trained models is used in the end. We therefore ask whether (i) a suitable horizon can be predicted from intrinsic properties of the system, namely its maximal Lyapunov exponent expressed in units of the timestep, and (ii) a single adaptive model, trained at the cost of one run, can approach the best fixed-horizon model found by grid search.
 
-Furthermore, we ask whether adapting the prediction horizon to the local dynamics of the system can provide a suitable training signal for neural forecasting models. We extend our theory by mapping the local predictability of the trajectory, measured in finite-time Lyapunov exponents (FTLEs), to the temporal horizon. % -> contributions
+\paragraph{Local instability.}
+Even a well-chosen global horizon assumes that the same horizon is appropriate throughout the trajectory. This assumption is restrictive for chaotic systems, where the local rate of divergence of nearby trajectories, as measured by finite-time Lyapunov exponents (FTLEs), can vary substantially over the state space. Some regions remain predictable over relatively long horizons, while in others errors grow rapidly and the forecast becomes unreliable much sooner. A global horizon is therefore too long in the former, forcing the model to fit essentially unpredictable targets, and too short in the latter, under-using the available predictability. We therefore also ask whether assigning horizons per sample, based on local FTLEs, provides a better training signal than a single global horizon.
 
 \subsection{Contributions}
 
-% What we're trying to do, in general
-
-The main contributions of this paper are as follows.
+We study how the training horizon of neural forecasting models for chaotic systems can be chosen from the dynamics of the system instead of by a grid search over fixed-horizon models. Our main contributions are as follows.
 
 \begin{enumerate}
-    \item A formulation of adaptive temporal horizon selection for neural forecasting of chaotic dynamical systems.
-    \item An implementation of four different training framework for adaptive horizon neural forecasting models: a linear scheduler, an online cross-validation, a Lyapunov-mean horizon, and an FTLE-weighted loss.
-    \item An empirical evaluation on benchmark chaotic systems, including the Lorenz-63, Lorenz-96 and Rössler systems.
+    \item \textbf{Problem formulation.} We formulate horizon selection as a problem of training the best possible model under a fixed computational budget, and introduce a budget-matched evaluation protocol in which compute is measured in rollout steps, so that a single adaptive model can be compared fairly with a full grid search over fixed horizons.
+    \item \textbf{Budget dependence of the optimal horizon.} We show empirically that the optimal fixed horizon is not a property of the system alone: it shifts towards longer rollouts as the training budget grows, so a horizon found with a cheap search does not transfer to a longer training run.
+    \item \textbf{Lyapunov-based adaptive horizon.} We propose setting the training horizon from the maximal Lyapunov exponent of the system, combined with a per-sample assignment based on finite-time Lyapunov exponents (FTLEs), and compare it with three alternatives: a linear horizon scheduler, online cross-validation, and an FTLE-weighted loss.
+    \item \textbf{Empirical evaluation.} On the Rössler, Lorenz-63 and Lorenz-96 systems at several timesteps, the Lyapunov-based horizon matches or outperforms the best model of a grid search under an equal budget, and it extends the valid prediction time. Most of the gain comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise assignment, and no method improves on the baseline when the task is easy enough for every fixed horizon to solve it.
 \end{enumerate}
 
 \newpage
@@ -202,6 +196,7 @@ The optimal horizon depends on the task and the goals of the model, which are gi
 It is not our main objective to design a model that will achieve state-of-the-art performance on the benchmark chaotic dynamical systems; rather, given an arbitrary set of assumptions and hyperparameters or a limited amount of computational resources, we want to show the superiority of the adaptive approach over fixed-horizon models.
 
 \subsection{Budget-Based Approach}
+\label{sec:budget-based}
 
 Following the previous arguments about the importance of finding an appropriate rollout length, our main objective is to \textbf{form an objective rule that could guide the horizon choice}, without the need to search for it empirically by training and validating models with different horizons.
 
@@ -515,16 +510,16 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 To test whether the missing gains on Rössler are due to the task being too easy (Section~\ref{sec:results-fixed}), we repeated all Rössler experiments with the $5 \times 5$ MLP (Table~\ref{tab:results-rossler_small}). The estimated MLE does not depend on the model, so the base horizon of LM is again clipped to $T_{\mathrm{base}} = 10$.
 
 \paragraph{The horizon matters again.}
-After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ at $\Delta t = 0.05, 0.08, 0.1$, compared with $9, 8, 7$ for the $3 \times 10$ model), and the error rises steeply beyond it: at $\Delta t = 0.1$, the 20-epoch model trained at $T = 10$ has about 2.5 times the error of the one at $T^*$. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
+After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ at $\Delta t = 0.05, 0.08, 0.1$, compared with $9, 8, 7$ for the $3 \times 10$ model), and the error rises steeply beyond it. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
 
 \paragraph{Equal budget.}
-In contrast to the $3 \times 10$ model, the budget-matched LM now beats the best 20-epoch fixed-horizon model over the full validation window at every timestep, by 27\%, 15\% and 14\% at $\Delta t = 0.05, 0.08, 0.1$, on 15, 15 and 14 of 20 seeds. At $T_{\mathrm{val}} = 1$, it is better at $\Delta t = 0.05$ and $0.1$ and comparable at $\Delta t = 0.08$. Because of the large spread over seeds, the differences are not significant after the Holm correction. Under the same budget, the grid search spends 20 epochs on each of ten horizons, whereas LM spends it on a single model at long horizons (about 110 epochs at $T_{\mathrm{base}} = 10$), which is what the small model needs.
+In contrast to the $3 \times 10$ model, the budget-matched LM now beats the best 20-epoch fixed-horizon model over the full validation window at every timestep. At $T_{\mathrm{val}} = 1$, it is better at $\Delta t = 0.05$ and $0.1$ and comparable at $\Delta t = 0.08$. Due to the large spread over the seeds, the differences are not significant after the Holm correction.
 
 \paragraph{Equal training length.}
 At 200 epochs, LM is again close to the oracle choice of the fixed horizon (within 1\%, 9\% and 1\% over the full validation window), and none of the differences is significant.
 
 \paragraph{Other methods.}
-LMR is as good as or better than LM (significantly at $\Delta t = 0.08$, $T_{\mathrm{val}} = 1$), so the FTLE-based assignment brings no benefit, as expected for a base horizon clipped at $T_{\max}$. LS and CV collapse again at $\Delta t = 0.05$ and are otherwise worse than the fixed-horizon optimum with a very large spread over seeds. WL is worse than the fixed-horizon optimum at every timestep, significantly over the full validation window.
+LMR is as good as or better than LM, so the FTLE-based assignment brings no benefit, as expected for a base horizon clipped at $T_{\max}$. LS and CV collapse again at $\Delta t = 0.05$ and are otherwise worse than the fixed-horizon optimum with a very large spread over seeds. WL is worse than the fixed-horizon optimum at every timestep.
 
 Overall, once the Rössler task constrains the model, LM gives the same kind of gain under an equal budget as on the two Lorenz systems. This supports the interpretation that the adaptive horizon pays off when the problem is limited by model capacity or by compute, and not when every fixed horizon already solves it.
 
