@@ -114,7 +114,7 @@ with the standard parameter values $\sigma=10$, $\rho=28$, and $\beta=8/3$ \cite
     \dot{y}=x+ay, \qquad
     \dot{z}=b+z(x-c),
 \end{equation}
-for which we use the commonly adopted chaotic parameter configuration $a=0.2$, $b=0.2$, and $c=5.7$ \cite{rossler_equation_1976}.
+for which we use the chaotic parameter configuration $a=0.37$, $b=0.2$, and $c=5.7$ \cite{rossler_equation_1976}. Compared with the frequently used $a=0.2$, the larger value of $a$ gives a more strongly chaotic attractor with a larger maximal Lyapunov exponent.
 
 \paragraph{Lorenz-96 system.} The Lorenz-96 system is defined as follows. For $i = 1, \dots, N$:
 
@@ -184,7 +184,7 @@ LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a pert
 
 \subsection{Neural Networks for Dynamical Systems}
 
-In this paper, the trajectory of a chaotic dynamical system is approximated using a simple artificial neural network. Specifically, we use a multi-layer perceptron (MLP) with 3 hidden layers of 10 neurons each, ReLU activations and residual connections, for all three systems. Inputs and targets are z-score normalized with the mean and standard deviation of the training split. The dimensionality of the input and output layers was adjusted as required by the dynamical system. All models are trained with Adam (learning rate $3 \cdot 10^{-4}$, weight decay $10^{-2}$) and a batch size of 64. Fixed-horizon models were trained for 20 and 200 epochs depending on the task.
+In this paper, the trajectory of a chaotic dynamical system is approximated using a simple artificial neural network. Specifically, we use a multi-layer perceptron (MLP) with 3 hidden layers of 10 neurons each, ReLU activations and residual connections, for all three systems. For Rössler, we additionally train a reduced MLP with two hidden layers of 5 neurons, which makes the forecasting task harder (see Section~\ref{sec:results-fixed}). Inputs and targets are z-score normalized with the mean and standard deviation of the training split. The dimensionality of the input and output layers was adjusted as required by the dynamical system. All models are trained with Adam (learning rate $3 \cdot 10^{-4}$, weight decay $10^{-2}$) and a batch size of 64. Fixed-horizon models were trained for 20 and 200 epochs depending on the task.
 
 The use of an MLP is motivated by the structure of the forecasting problem. The model approximates a low-dimensional one-step transition map, while the required temporal depth is introduced through repeated autoregressive application. This separation is consistent with the Serial Scaling Hypothesis, which states that some problems are fundamentally sequential, so their solutions cannot be improved by parallel processing of input sequences \cite{liu_serial_2026}. Time series forecasting falls into that "inherently serial" problem category since it requires learning a state-to-state map; therefore, using a Transformer neural network would not provide an advantage here. The MLP provides a smaller and more direct architecture for studying the effect of temporal horizon.
 
@@ -381,6 +381,7 @@ The following subsections go through the methods in the order in which they were
 
 \input{tables/table_lorenz}
 \input{tables/table_rossler}
+\input{tables/table_rossler_small}
 \input{tables/table_lorenz96}
 
 \subsection{Fixed-Horizon Baseline}
@@ -409,9 +410,9 @@ With longer training, the optimal horizon moves to longer rollouts in almost eve
 The best horizon for one-step accuracy is consistently shorter than the best horizon for pooled error, so no single training horizon is optimal for both. The one-step optimum is also poorly determined: it varies widely between seeds and does not stabilize with longer training.
 
 \paragraph{Rössler.}
-For Rössler, the error keeps decreasing up to the longest tested horizon, so the optimum lies at the boundary of the search range. As the cross-validation results show, the MSE does not vary a lot for $T_{\mathrm{val}} \in 5, \dots, 10$ and the optimal horizons are non-informative. The low variation stems from the fact that the forecasting task is too easy in the case of the Rössler system. Therefore, we decided to % TODO - finish
+For Rössler, the error keeps decreasing up to the longest tested horizon after 200 epochs ($T^*_{\mathrm{all}} = 10$ at every timestep), so the optimum lies at the boundary of the search range. Moreover, the cross-validation curves are almost flat for $T \in \{5, \dots, 10\}$ (Figure~\ref{fig:validation-curves}): the differences between these training horizons are smaller than the spread over seeds, so the location of the optimum carries little information. The low variation stems from the fact that the forecasting task is too easy in the case of the Rössler system. Its estimated MLE ($\hat\lambda_{\max} \approx 0.19$, Table~\ref{tab:horizons}) is almost five times smaller than that of Lorenz-63, so even the longest rollout of $\tau = 1.0$ covers only $0.2$ Lyapunov times, and an MLP with three hidden layers of 10 neurons has enough capacity to approximate the one-step map so accurately that the rollout error stays small at every training horizon. The horizon is then not a binding constraint, and none of the adaptive methods has room to improve on the fixed-horizon baseline.
 
-Since we wanted to keep the set of validation horizons consistent across all systems, we decided to increase the task difficulty by using a simplified neural network architecture with two hodden layers of 5 neurons instead of three hidden layers of 10 neurons that we use in both Lorenz systems.
+There are two ways to make the problem harder: extending the range of horizons or reducing the capacity of the model. For Rössler, the Lyapunov-based base horizon would lie between 23 and 47 steps (Table~\ref{tab:horizons}), so extending the range far enough would break the comparability of the validation horizons across systems and multiply the cost of the fixed-horizon grid search. Since we wanted to keep the set of training and validation horizons consistent across all systems, we decided instead to increase the task difficulty by using a simplified neural network architecture with two hidden layers of 5 neurons ($5 \times 5$) instead of three hidden layers of 10 neurons ($3 \times 10$) that we use in both Lorenz systems. Everything else (data, optimizer, epochs, seeds, rollout budget and Lyapunov fraction $\gamma$) is unchanged. With less capacity, the one-step map is approximated less accurately, model errors accumulate faster along the rollout, and the choice of the training horizon matters again. We report the $5 \times 5$ results as a supplementary experiment next to the original Rössler results (Table~\ref{tab:results-rossler_small}, Section~\ref{sec:results-rossler-small}); the other tables and figures refer to the $3 \times 10$ architecture.
 
 \subsection{Linear Horizon Scheduler}
 \label{sec:results-ls}
@@ -508,6 +509,25 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 
 \paragraph{WL.} On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error. On Rössler, it forecasts about as long as the other methods.
 
+\subsection{Rössler with a Reduced Architecture}
+\label{sec:results-rossler-small}
+
+To test whether the missing gains on Rössler are due to the task being too easy (Section~\ref{sec:results-fixed}), we repeated all Rössler experiments with the $5 \times 5$ MLP (Table~\ref{tab:results-rossler_small}). The estimated MLE does not depend on the model, so the base horizon of LM is again clipped to $T_{\mathrm{base}} = 10$.
+
+\paragraph{The horizon matters again.}
+After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ at $\Delta t = 0.05, 0.08, 0.1$, compared with $9, 8, 7$ for the $3 \times 10$ model), and the error rises steeply beyond it: at $\Delta t = 0.1$, the 20-epoch model trained at $T = 10$ has about 2.5 times the error of the one at $T^*$. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
+
+\paragraph{Equal budget.}
+In contrast to the $3 \times 10$ model, the budget-matched LM now beats the best 20-epoch fixed-horizon model over the full validation window at every timestep, by 27\%, 15\% and 14\% at $\Delta t = 0.05, 0.08, 0.1$, on 15, 15 and 14 of 20 seeds. At $T_{\mathrm{val}} = 1$, it is better at $\Delta t = 0.05$ and $0.1$ and comparable at $\Delta t = 0.08$. Because of the large spread over seeds, the differences are not significant after the Holm correction. Under the same budget, the grid search spends 20 epochs on each of ten horizons, whereas LM spends it on a single model at long horizons (about 110 epochs at $T_{\mathrm{base}} = 10$), which is what the small model needs.
+
+\paragraph{Equal training length.}
+At 200 epochs, LM is again close to the oracle choice of the fixed horizon (within 1\%, 9\% and 1\% over the full validation window), and none of the differences is significant.
+
+\paragraph{Other methods.}
+LMR is as good as or better than LM (significantly at $\Delta t = 0.08$, $T_{\mathrm{val}} = 1$), so the FTLE-based assignment brings no benefit, as expected for a base horizon clipped at $T_{\max}$. LS and CV collapse again at $\Delta t = 0.05$ and are otherwise worse than the fixed-horizon optimum with a very large spread over seeds. WL is worse than the fixed-horizon optimum at every timestep, significantly over the full validation window.
+
+Overall, once the Rössler task constrains the model, LM gives the same kind of gain under an equal budget as on the two Lorenz systems. This supports the interpretation that the adaptive horizon pays off when the problem is limited by model capacity or by compute, and not when every fixed horizon already solves it.
+
 \subsection{Summary Across Methods}
 \label{sec:summary}
 
@@ -542,7 +562,7 @@ Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the 
 \end{itemize}
 
 \paragraph{Advantage of adaptive methods.}
-Adaptive techniques show advantage over the fixed baseline when a given approximation problem is constrained by either its complexity or limited amount of computation.
+Adaptive techniques show advantage over the fixed baseline when a given approximation problem is constrained by either its complexity or limited amount of computation. On Rössler, the budget-matched LM gives no gain with the $3 \times 10$ MLP, but beats the best fixed-horizon model of the sweep at every timestep once the capacity is reduced to $5 \times 5$ (Section~\ref{sec:results-rossler-small}).
 
 \section{Conclusion}
 
