@@ -18,7 +18,7 @@
 
 Forecasting chaotic dynamical systems is challenging because small differences in initial conditions grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the training horizon is therefore a central design choice: short horizons give accurate one-step models that do not learn how their errors compound, while long horizons force the model to fit targets dominated by divergence. Most forecasting setups train on single-step predictions, and when longer horizons are used, the horizon is chosen by an expensive grid search over fixed-horizon models. We show that the outcome of this search is not a property of the system alone: the optimal horizon shifts with the training budget, so it does not transfer between setups.
 
-We propose setting the training horizon from the maximal Lyapunov exponent of the system, further adjusted per sample according to the local instability measured by finite-time Lyapunov exponents. We compare this approach with a fixed-horizon models on the Lorenz-63, Lorenz-96 and Rössler systems, treating the horizon optimization as a function of available computational resources.
+We propose setting the training horizon from the maximal Lyapunov exponent of the system, further adjusted per sample according to the local instability measured by finite-time Lyapunov exponents. We compare this approach with a fixed-horizon models on the Rössler, Lorenz-63 and Lorenz-96 systems, treating the horizon optimization as a function of available computational resources.
 
 Under an equal budget, the Lyapunov-based horizon matches or outperforms the best model of the grid search on both Lorenz systems and on a capacity-limited Rössler setup, and it extends the valid prediction time. With longer training, the gap to the best fixed-horizon model closes, and no method improves on the baseline when the task is easy enough for every fixed horizon to solve it. Most of the benefit comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise assignment.
 
@@ -98,16 +98,7 @@ The relationship between these terms gives $\tau = \Delta t \cdot T$.
 \subsection{Benchmark Dynamical Systems}
 \label{sec:dynamical-systems}
 
-As a baseline, we selected three chaotic systems: the three-dimensional Lorenz-63 and Rössler attractors and the ten-dimensional Lorenz-96 system. Their dynamics have been extensively studied, allowing us to draw on previous work to obtain reliable ground-truth reference values \cite{ayers_supervised_2023}.
-
-\paragraph{Lorenz-63 system.} The Lorenz-63 system, originally introduced as a simplified model of atmospheric convection, is defined as
-
-\begin{equation}
-    \dot{x}=\sigma(y-x), \qquad
-    \dot{y}=x(\rho-z)-y, \qquad
-    \dot{z}=xy-\beta z,
-\end{equation}
-with the standard parameter values $\sigma=10$, $\rho=28$, and $\beta=8/3$ \cite{lorenz_deterministic_1963}.
+As a baseline, we selected three chaotic systems: the three-dimensional Rössler and Lorenz-63 attractors and the ten-dimensional Lorenz-96 system. Their dynamics have been extensively studied, allowing us to draw on previous work to obtain reliable ground-truth reference values \cite{ayers_supervised_2023}.
 
 \paragraph{Rössler system.} The Rössler system was designed as a comparatively simple continuous-time model of chaos and is governed by
 
@@ -117,6 +108,15 @@ with the standard parameter values $\sigma=10$, $\rho=28$, and $\beta=8/3$ \cite
     \dot{z}=b+z(x-c),
 \end{equation}
 for which we use the chaotic parameter configuration $a=0.37$, $b=0.2$, and $c=5.7$ \cite{rossler_equation_1976}. Compared with the frequently used $a=0.2$, the larger value of $a$ gives a more strongly chaotic attractor with a larger maximal Lyapunov exponent.
+
+\paragraph{Lorenz-63 system.} The Lorenz-63 system, originally introduced as a simplified model of atmospheric convection, is defined as
+
+\begin{equation}
+    \dot{x}=\sigma(y-x), \qquad
+    \dot{y}=x(\rho-z)-y, \qquad
+    \dot{z}=xy-\beta z,
+\end{equation}
+with the standard parameter values $\sigma=10$, $\rho=28$, and $\beta=8/3$ \cite{lorenz_deterministic_1963}.
 
 \paragraph{Lorenz-96 system.} The Lorenz-96 system is defined as follows. For $i = 1, \dots, N$:
 
@@ -374,13 +374,13 @@ All models are evaluated on the validation split at $T_{\mathrm{val}} \in \{1, \
 
 Each method is compared with the best fixed-horizon model of the same training regime: budget-based LM with fixed-horizon models trained for 20 epochs, and all other methods with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
 
-Tables~\ref{tab:results-lorenz}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. The results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
+Tables~\ref{tab:results-rossler}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. The results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
 
 The following subsections go through the methods in the order in which they were introduced.
 
-\input{tables/table_lorenz}
 \input{tables/table_rossler}
 \input{tables/table_rossler_small}
+\input{tables/table_lorenz}
 \input{tables/table_lorenz96}
 
 \subsection{Fixed-Horizon Baseline}
@@ -418,7 +418,7 @@ There are two ways to make the problem harder: extending the range of horizons o
 
 LS starts at $T = 1$ and increases the horizon by one every 20 epochs up to $T_{\max} = 10$ (Section~\ref{sec:ls}).
 
-LS is the least reliable method. On Lorenz-63, it has the highest error of all methods. On Lorenz-96 and on Rössler at $\Delta t = 0.05$, it collapses: all seeds converge to practically the same poor solution, several times worse than the fixed-horizon optimum. Only on Rössler at the larger timesteps does it come close to the optimum.
+LS is the least reliable method. On Lorenz-63, it has the highest error of all methods. On Rössler at $\Delta t = 0.05$ and on Lorenz-96, it collapses: all seeds converge to practically the same poor solution, several times worse than the fixed-horizon optimum. Only on Rössler at the larger timesteps does it come close to the optimum.
 
 This is what the design of LS suggests (Section~\ref{sec:ls}): the last stages of the schedule force rollouts up to $T_{\max} = 10$, which exceeds the predictable range of the two Lorenz systems, while the slowly diverging Rössler system tolerates such horizons.
 
@@ -433,7 +433,7 @@ CV increases the horizon during a curriculum phase, selects the horizon with the
 Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$, and usually longer (Table~\ref{tab:cv-horizons}). This bias follows from the design of the method: a candidate for a longer horizon has been trained for more epochs, so its validation score reflects the extra training time and not only the horizon.
 
 \paragraph{Error.}
-On Lorenz-63, CV is clearly worse than the fixed-horizon optimum, especially at $T_{\mathrm{val}} = 1$. On Lorenz-96 and on Rössler at $\Delta t = 0.05$, it collapses in the same way as LS: the validation error never leaves its initial level during the curriculum, so every stage ends as early as allowed and the selected horizon carries no information. On Rössler at the larger timesteps, CV is close to the optimum and selects the same horizon as the grid search.
+On Lorenz-63, CV is clearly worse than the fixed-horizon optimum, especially at $T_{\mathrm{val}} = 1$. On Rössler at $\Delta t = 0.05$ and on Lorenz-96, it collapses in the same way as LS: the validation error never leaves its initial level during the curriculum, so every stage ends as early as allowed and the selected horizon carries no information. On Rössler at the larger timesteps, CV is close to the optimum and selects the same horizon as the grid search.
 
 Overall, the online selection of CV does not replace the grid search.
 
@@ -458,7 +458,7 @@ At 200 epochs, LM stays close to an oracle choice of the fixed horizon on all sy
 
 LMR uses the same horizons as LM but randomly permutes them across samples, removing the link to the local FTLE (Section~\ref{sec:lmr}).
 
-Assigning horizons by the local FTLE helps only on Lorenz-63, where randomly permuting the horizons (LMR) increases the error at the two larger timesteps. On Lorenz-96 and Rössler, LMR is as good as or slightly better than LM. On Rössler, the comparison has little meaning, since the clipped base horizon leaves almost no room for different assignments. Most of the benefit of LM therefore comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
+Assigning horizons by the local FTLE helps only on Lorenz-63, where randomly permuting the horizons (LMR) increases the error at the two larger timesteps. On Rössler and Lorenz-96, LMR is as good as or slightly better than LM. On Rössler, the comparison has little meaning, since the clipped base horizon leaves almost no room for different assignments. Most of the benefit of LM therefore comes from choosing the \emph{mean} horizon and mixing rollout lengths around it, not from matching individual samples to their local instability.
 
 \subsection{Weighted Loss}
 \label{sec:results-wl}
@@ -484,7 +484,7 @@ To relate these results to the optimization landscape, we computed $g(T)$ for th
 \paragraph{Long training horizons damp it.} On Lorenz-63 and Lorenz-96, training at longer horizons reduces the amplification, although not monotonically: it is largest for short but not one-step training horizons. On Rössler, the effect is weak.
 
 \paragraph{LM behaves like the fixed-horizon optimum.}
-On Lorenz-96 and Rössler, the $g(T)$ curves of LM almost coincide with those of the fixed-horizon model at $T^*_{\mathrm{all}}$: training on a mixture of horizons around $T_{\mathrm{base}}$ leads to a similar loss landscape as training at a single horizon of similar length.
+On Rössler and Lorenz-96, the $g(T)$ curves of LM almost coincide with those of the fixed-horizon model at $T^*_{\mathrm{all}}$: training on a mixture of horizons around $T_{\mathrm{base}}$ leads to a similar loss landscape as training at a single horizon of similar length.
 
 Since $g(T)$ is measured at the final parameters, it describes the landscape around the solution, not the difficulty along the way. Still, it is consistent with the observation that long-horizon training needs more epochs to pay off (Section~\ref{sec:results-fixed}).
 
@@ -504,7 +504,7 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 
 \paragraph{LS and CV.} The collapsed models lose their forecast skill within a fraction of a Lyapunov time.
 
-\paragraph{LM and LMR.} Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Lorenz-96 and Rössler, LM, LMR and the fixed-horizon optimum perform alike.
+\paragraph{LM and LMR.} Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Rössler and Lorenz-96, LM, LMR and the fixed-horizon optimum perform alike.
 
 \paragraph{WL.} On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error. On Rössler, it forecasts about as long as the other methods.
 
@@ -554,7 +554,7 @@ Overall, once the Rössler task constrains the model, LM gives the same kind of 
 Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three result tables, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. In short:
 \begin{itemize}
     \item \textbf{Fixed horizon:} the optimal horizon depends on the training budget and on the evaluation scope, so it must be searched for again whenever either changes.
-    \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Lorenz-96 and on Rössler at the smallest timestep. CV systematically selects too long horizons.
+    \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Rössler at the smallest timestep and on Lorenz-96. CV systematically selects too long horizons.
     \item \textbf{LM:} under an equal budget, it matches or beats the best fixed-horizon model on both Lorenz systems, with the gain growing along the rollout. At equal training length, it stays close to an oracle choice of the fixed horizon.
     \item \textbf{LMR:} the FTLE-based assignment helps only on Lorenz-63; the main benefit of LM comes from the choice of the mean horizon.
     \item \textbf{WL:} worse than both the fixed-horizon optimum and LM everywhere.
@@ -592,9 +592,9 @@ A good idea would be to try benchmarking the LM method on real-world datasets or
 
 Tables~\ref{tab:nrmse} and~\ref{tab:smape} repeat the pooled comparison of Section~\ref{sec:summary} with NRMSE and SMAPE instead of MSE. The fixed-horizon references are kept at the MSE-selected $T^*_{\mathrm{all}}$, so the tables test whether the conclusions depend on the error measure, not whether another horizon would be optimal for it.
 
-The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum. The collapse of LS and CV on Lorenz-96 and on Rössler at $\Delta t = 0.05$ is equally visible.
+The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum. The collapse of LS and CV on Rössler at $\Delta t = 0.05$ and on Lorenz-96 is equally visible.
 
-SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. SMAPE is large for Lorenz-96 and Rössler because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
+SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. SMAPE is large for Rössler and Lorenz-96 because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
 
 \section{Methods Description}
 \label{app:method-description}
