@@ -475,11 +475,14 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 
 \paragraph{Fixed horizon.} On Lorenz-63, the VPT keeps increasing with the training horizon beyond $T^*_{\mathrm{all}}$: the ten-step MSE favors shorter horizons than long-term stability does. On Lorenz-96, the opposite happens at the larger timesteps: models trained at the longest horizons lose their forecast skill almost entirely, which suggests that 200 epochs are not enough for long-horizon training on this system.
 
-\paragraph{LS and CV.} The collapsed models lose their forecast skill within a fraction of a Lyapunov time.
+\paragraph{Linear Scheduler and Cross-Validation.}
+The collapsed models lose their forecast skill within a fraction of a Lyapunov time.
 
-\paragraph{LM and LMR.} Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Rössler and Lorenz-96, LM, LMR and the fixed-horizon optimum perform alike.
+\paragraph{Lyapunov-mean.}
+Under an equal budget, LM forecasts clearly longer than the best 20-epoch fixed-horizon model on both Lorenz systems, on Lorenz-63 even longer than the best 200-epoch model. The advantage of LM thus grows with the forecast horizon. On Rössler, there is no difference. At 200 epochs, LM forecasts longer than the fixed-horizon optimum on Lorenz-63, although its ten-step MSE is slightly higher: it is close to the horizon that is best for long-term stability. On Rössler and Lorenz-96, LM, its randomized version and the fixed-horizon optimum perform alike.
 
-\paragraph{WL.} On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error. On Rössler, it forecasts about as long as the other methods.
+\paragraph{Weighted Loss.}
+On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that train successfully, consistent with its higher error. On Rössler, it forecasts about as long as the other methods.
 
 \subsection{Rössler with a Reduced Architecture}
 \label{sec:results-rossler-small}
@@ -487,13 +490,13 @@ All models are trained and selected on rollouts of at most ten steps. To test wh
 To test whether the missing gains on Rössler are due to the task being too easy (Section~\ref{sec:results-fixed}), we repeated all Rössler experiments with the $5 \times 5$ MLP (Table~\ref{tab:results-rossler_small}). The estimated MLE does not depend on the model, so the base horizon of LM is again clipped to $T_{\mathrm{base}} = 10$.
 
 \paragraph{The horizon matters again.}
-After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ at $\Delta t = 0.05, 0.08, 0.1$, compared with $9, 8, 7$ for the $3 \times 10$ model), and the error rises steeply beyond it. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
+After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ compared with $9, 8, 7$ for the standard model), and the error rises steeply beyond it. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
 
 \paragraph{Equal budget.}
 In contrast to the $3 \times 10$ model, the budget-matched LM now beats the best 20-epoch fixed-horizon model over the full validation window at every timestep. At $T_{\mathrm{val}} = 1$, it is better at $\Delta t = 0.05$ and $0.1$ and comparable at $\Delta t = 0.08$. Due to the large spread over the seeds, the differences are not significant after the Holm correction.
 
 \paragraph{Equal training length.}
-At 200 epochs, LM is again close to the oracle choice of the fixed horizon (within 1\%, 9\% and 1\% over the full validation window), and none of the differences is significant.
+At 200 epochs, LM is again close to the best fixed-horizon model, and none of the differences is significant.
 
 \paragraph{Other methods.}
 LMR is as good as or better than LM, so the FTLE-based assignment brings no benefit, as expected for a base horizon clipped at $T_{\max}$. LS and CV collapse again at $\Delta t = 0.05$ and are otherwise worse than the fixed-horizon optimum with a very large spread over seeds. WL is worse than the fixed-horizon optimum at every timestep.
