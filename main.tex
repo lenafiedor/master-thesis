@@ -189,7 +189,7 @@ LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a pert
 
 In this paper, the trajectory of a chaotic dynamical system is approximated using a simple artificial neural network. Specifically, we use a multi-layer perceptron (MLP) with three hidden layers of 10 neurons each, ReLU activations and residual connections, for all three systems. For Rössler, we additionally train a reduced MLP with two hidden layers of 5 neurons, which makes the forecasting task harder (see Section~\ref{sec:results-fixed}). Inputs and targets are z-score normalized with the mean and standard deviation of the training split. The dimensionality of the input and output layers was adjusted as required by the dynamical system. All models are trained with Adam (learning rate $3 \cdot 10^{-4}$, weight decay $10^{-2}$) and a batch size of 64. Fixed-horizon models were trained for 20 or 200 epochs, depending on the training regime.
 
-The use of an MLP is motivated by the structure of the forecasting problem. The model approximates a low-dimensional one-step transition map, while the required temporal depth is introduced through repeated autoregressive application. Since the full state of each system determines its next state, there is no long input context for an attention mechanism to exploit. Moreover, Transformer-based models have been reported to offer no advantage in forecasting chaotic dynamics and are often outperformed by considerably simpler architectures \cite{zeng_are_2022}. The MLP therefore provides a smaller and more direct architecture for studying the effect of the temporal horizon without confounding it with architectural choices.
+The use of an MLP is motivated by the structure of the forecasting problem. The model approximates a low-dimensional one-step transition map, while the required temporal depth is introduced through repeated auto-regressive application. Since the full state of each system determines its next state, there is no long input context for an attention mechanism to exploit. Moreover, Transformer-based models have been reported to offer no advantage in time series forecasting and are often outperformed by considerably simpler architectures \cite{zeng_are_2022}. The MLP therefore provides a smaller and more direct architecture for studying the effect of the temporal horizon without confounding it with architectural choices.
 
 \subsection{Prediction Horizon as a Design Choice}
 
@@ -244,7 +244,7 @@ Predictability, however, also varies along the attractor. We therefore hypothesi
 
 Initially, we trained a set of neural networks to approximate the dynamical systems described above using the parameters given in Section~\ref{sec:dynamical-systems}. During simulation, we used a burn-in period of 10 time units, i.e., we discarded the initial $\lceil \frac{10.0}{\Delta t} \rceil$ steps so that the trajectory settles on the attractor.
 
-For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and roll out the simulation up to $T_{\max} = 10$ steps, corresponding to physical times $\tau = 0.50, 0.80, 1.0$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the autoregressive rollout.
+For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and roll out the simulation up to $T_{\max} = 10$ steps, corresponding to physical times $\tau = 0.50, 0.80, 1.0$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the auto-regressive rollout.
 
 For each training horizon $T \in \{1, \dots, 10\}$, we trained 20 MLPs with fixed seeds, (1) for 20 epochs and (2) for 200 epochs, and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). We were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.0$. The MSE obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
 
@@ -326,7 +326,7 @@ Interpretation:
     \item If $\Lambda_m < \mu_{\Lambda}$, then $z_m < 0$ and $T_m$ becomes longer: locally more predictable states are trained on longer rollouts.
 \end{itemize}
 
-Each sample is rolled out autoregressively for its own horizon $T_m$, and its loss is the MSE averaged over these $T_m$ steps.
+Each sample is rolled out auto-regressively for its own horizon $T_m$, and its loss is the MSE averaged over these $T_m$ steps.
 
 \paragraph{Note.} Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
@@ -364,7 +364,7 @@ As a result, samples from stable regions are trained on the whole rollout, while
 \subsection{Reporting Conventions}
 \label{sec:reporting}
 
-All models are evaluated on the validation split at $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an autoregressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
+All models are evaluated on the validation split at $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an auto-regressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
 
 Each method is compared with the best fixed-horizon model of the same training regime: budget-based LM with fixed-horizon models trained for 20 epochs, and all other methods with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
 
@@ -527,7 +527,7 @@ Overall, once the Rössler task constrains the model, LM gives the same kind of 
   \label{fig:method-curves}
 \end{figure}
 
-Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three result tables, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. In short:
+Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the result tables, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. In short:
 \begin{itemize}
     \item \textbf{Fixed horizon:} the optimal horizon depends on the training budget and on the evaluation scope, so it must be searched for again whenever either changes.
     \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Rössler at the smallest timestep and on Lorenz-96. CV systematically selects horizons that are too long.
@@ -543,7 +543,7 @@ Adaptive techniques show an advantage over the fixed baseline when a given appro
 
 We demonstrated the advantages of an adaptive approach in finding optimal temporal horizons for forecasting chaotic dynamical systems. First, we show that this optimum depends on the task considered and the available compute budget. Treating optimal horizons as a function of computational resources, we developed an algorithm to find a good forecasting horizon without training and validating a set of fixed models, but relying solely on the estimate of the system's maximal Lyapunov exponent. Horizons that this method yields overlap to a large extent with the horizons chosen by cross-validation of the fixed models, which represent the commonly used approach and form our baseline.
 
-We also tried to incorporate the information about local instability into training by mapping finite-time Lyapunov exponents to sample-wise horizons. However, this approach did not show any improvement in the dynamical systems considered, giving similar results to its variant with randomized mapping.
+We also tried to incorporate the information about local instability into training by mapping finite-time Lyapunov exponents to sample-wise horizons. However, this approach did not show a consistent improvement in the dynamical systems considered, giving similar results to its variant with randomized mapping.
 
 \section{Future Work}
 
@@ -582,7 +582,7 @@ This section gives the full formulation of the FTLE-weighted loss introduced in 
 
 To further improve the performance of the model by measuring how nearby trajectories diverge at a certain point on the trajectory, we introduced the idea of soft-weighted loss over a fixed rollout horizon. The horizon is the Lyapunov-based base horizon $T_{\mathrm{base}}$ from Eq.~\eqref{eq:t-base}, and the FTLE window equals this horizon, $W = T_{\mathrm{base}}$.
 
-For each initial state $\mathbf{x}_m$, the model rolls forward autoregressively for $T_{\mathrm{base}}$ steps, and the FTLE $\Lambda_m$ is calculated, measuring a short-window maximum local expansion:
+For each initial state $\mathbf{x}_m$, the model rolls forward auto-regressively for $T_{\mathrm{base}}$ steps, and the FTLE $\Lambda_m$ is calculated, measuring a short-window maximum local expansion:
 
 \[
 \Lambda_m = \frac{1}{W \Delta t} \ln \sigma_{\max}(M_m),
