@@ -18,11 +18,11 @@
 
 Forecasting chaotic dynamical systems is challenging because small differences in initial conditions grow rapidly, limiting the reliability of long-term predictions. In neural trajectory forecasting, the training horizon is therefore a central design choice: short horizons give accurate one-step models that do not learn how their errors compound, while long horizons force the model to fit targets dominated by divergence. Most forecasting setups train on single-step predictions, and when longer horizons are used, the horizon is chosen by an expensive grid search over fixed-horizon models. We show that the outcome of this search is not a property of the system alone: the optimal horizon shifts with the training budget, so it does not transfer between setups.
 
-We propose setting the training horizon from the maximal Lyapunov exponent of the system, further adjusted per sample according to the local instability measured by finite-time Lyapunov exponents. We compare this approach with a fixed-horizon models on the Rössler, Lorenz-63 and Lorenz-96 systems, treating the horizon optimization as a function of available computational resources.
+We propose setting the training horizon from the maximal Lyapunov exponent of the system, further adjusted per sample according to the local instability measured by finite-time Lyapunov exponents. We compare this approach with fixed-horizon models on the Rössler, Lorenz-63 and Lorenz-96 systems, treating the horizon optimization as a function of available computational resources.
 
 Under an equal budget, the Lyapunov-based horizon matches or outperforms the best model of the grid search on both Lorenz systems and on a capacity-limited Rössler setup, and it extends the valid prediction time. With longer training, the gap to the best fixed-horizon model closes, and no method improves on the baseline when the task is easy enough for every fixed horizon to solve it. Most of the benefit comes from the Lyapunov-based choice of the mean horizon rather than from the sample-wise assignment.
 
-Overall, the results suggest that deriving the training horizon from the dynamics of the system is a cheap and effective alternative to grid search when compute or model capacity is limited and that treating the prediction horizon as an adaptive component is a promising direction for improving neural forecasting in chaotic dynamical systems.
+Overall, the results suggest that deriving the training horizon from the dynamics of the system is a cheap and effective alternative to grid search when compute or model capacity is limited, and that treating the prediction horizon as an adaptive component is a promising direction for improving neural forecasting in chaotic dynamical systems.
 
 \newpage
 
@@ -33,7 +33,7 @@ Overall, the results suggest that deriving the training horizon from the dynamic
 
 \subsection{Motivation}
 
-Forecasting chaotic dynamical systems is an important, yet difficult task, as many systems across different scientific domains exhibit nonlinear, chaotic behavior. Examples include the atmosphere and climate \cite{lorenz_deterministic_1963, bauer_quiet_2015}, fluid turbulence, population dynamics in ecology \cite{may_simple_1976}, and electrical activity in neural and cardiac tissue \cite{strogatz_nonlinear_1994}. In these systems, small differences in initial conditions can grow rapidly and lead to divergent trajectories. Existing work focuses mainly on one-step predictions that do not capture long-term chaotic behaviors \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Understanding how these systems evolve on a longer timescale is crucial; therefore, we focus on the \emph{temporal horizon} aspect, meaning how far in the future is the model trained to predict.
+Forecasting chaotic dynamical systems is an important yet difficult task, as many systems across different scientific domains exhibit nonlinear, chaotic behavior. Examples include the atmosphere and climate \cite{lorenz_deterministic_1963, bauer_quiet_2015}, fluid turbulence, population dynamics in ecology \cite{may_simple_1976}, and electrical activity in neural and cardiac tissue \cite{strogatz_nonlinear_1994}. In these systems, small differences in initial conditions can grow rapidly and lead to divergent trajectories. Existing work focuses mainly on one-step predictions that do not capture long-term chaotic behaviors \cite{aceituno_temporal_2025, vlachas_data-driven_2018, pathak_model-free_2018}. Understanding how these systems evolve on a longer timescale is crucial; therefore, we focus on the \emph{temporal horizon} aspect, meaning how far into the future the model is trained to predict.
 
 The difficulty of the prediction task strongly depends on the rollout length. Short-term predictions may remain close to the true trajectory, whereas longer-term predictions accumulate errors and eventually become unreliable \cite{aceituno_temporal_2025}. The training horizon therefore shapes what the model learns: if it is too short, the model never observes how its errors compound; if it is too long, the model is asked to fit targets that are essentially unpredictable. Recent work demonstrates the benefits of adapting temporal decisions to the forecasting context \cite{pan_leapts_2026, zhang_elastst_2024}.
 
@@ -44,7 +44,7 @@ In practice, the training horizon is usually chosen by grid search: a number of 
 We identify two limitations of training with a single, fixed horizon.
 
 \paragraph{Choosing the horizon without a grid search.}
-The optimal training horizon $T_{\mathrm{opt}}$ is not a property of the system alone. It depends on the rate of error growth in the system, on modeling choices such as the sampling timestep and the model capacity, and on the task: the available computational budget and the evaluation horizons $T_{\mathrm{val}}$ over which the model is expected to forecast. Changing any of these can shift $T_{\mathrm{opt}}$ (Section~\ref{sec:budget-based}), so a horizon selected for one setup does not transfer to another, and the search has to be repeated. Each search trains one model per candidate horizon, so its cost grows linearly with the size of the grid, while only one of the trained models is used in the end. We therefore ask whether (i) a suitable horizon can be predicted from intrinsic properties of the system, namely its maximal Lyapunov exponent expressed in units of the timestep, and (ii) a single adaptive model, trained at the cost of one run, can approach the best fixed-horizon model found by grid search.
+The optimal training horizon $T^*$ is not a property of the system alone. It depends on the rate of error growth in the system, on modeling choices such as the sampling timestep and the model capacity, and on the task: the available computational budget and the evaluation horizons $T_{\mathrm{val}}$ over which the model is expected to forecast. Changing any of these can shift $T^*$ (Section~\ref{sec:budget-based}), so a horizon selected for one setup does not transfer to another, and the search has to be repeated. Each search trains one model per candidate horizon, so its cost grows linearly with the size of the grid, while only one of the trained models is used in the end. We therefore ask whether (i) a suitable horizon can be predicted from intrinsic properties of the system, namely its maximal Lyapunov exponent expressed in units of the timestep, and (ii) a single adaptive model, trained at the cost of one run, can approach the best fixed-horizon model found by grid search.
 
 \paragraph{Local instability.}
 Even a well-chosen global horizon assumes that the same horizon is appropriate throughout the trajectory. This assumption is restrictive for chaotic systems, where the local rate of divergence of nearby trajectories, as measured by finite-time Lyapunov exponents (FTLEs), can vary substantially over the state space. Some regions remain predictable over relatively long horizons, while in others errors grow rapidly and the forecast becomes unreliable much sooner. A global horizon is therefore too long in the former, forcing the model to fit essentially unpredictable targets, and too short in the latter, under-using the available predictability. We therefore also ask whether assigning horizons per sample, based on local FTLEs, provides a better training signal than a single global horizon.
@@ -85,11 +85,11 @@ where the overdot denotes differentiation with respect to $t$.
 
 We focus particularly on chaotic systems, a subset of dynamical systems that exhibits extreme sensitivity to initial conditions and can be characterized by its chaotic attractor, meaning a set of points towards which the system evolves \cite{aceituno_temporal_2025}.
 
-One clarification that must be provided concerns the concept of time in the simulations. In order to approximate dynamical systems with neural networks, one needs to discretize the timestep. In this paper, separate symbols are used to denote different time concepts.
+One clarification that must be provided concerns the concept of time in the simulations. In order to approximate dynamical systems with neural networks, one needs to discretize time. In this paper, separate symbols are used to denote different time concepts.
 
 \begin{itemize}
-    \item $\tau$: Physical time,
-    \item $\Delta t$: Timestep of the model, i.e. the sampling step of the trajectory and the time advanced by one model prediction,
+    \item $\tau$: Physical time spanned by a rollout,
+    \item $\Delta t$: Timestep of the model, i.e., the sampling step of the trajectory and the time advanced by one model prediction,
     \item $T$: Discrete time horizon (number of model steps).
 \end{itemize}
 
@@ -98,7 +98,7 @@ The relationship between these terms gives $\tau = \Delta t \cdot T$.
 \subsection{Benchmark Dynamical Systems}
 \label{sec:dynamical-systems}
 
-As a baseline, we selected three chaotic systems: the three-dimensional Rössler and Lorenz-63 attractors and the ten-dimensional Lorenz-96 system. Their dynamics have been extensively studied, allowing us to draw on previous work to obtain reliable ground-truth reference values \cite{ayers_supervised_2023}.
+As benchmarks, we selected three chaotic systems: the three-dimensional Rössler and Lorenz-63 attractors and the ten-dimensional Lorenz-96 system. Their dynamics have been extensively studied, allowing us to draw on previous work to obtain reliable ground-truth reference values \cite{ayers_supervised_2023}.
 
 \paragraph{Rössler system.} The Rössler system was designed as a comparatively simple continuous-time model of chaos and is governed by
 
@@ -118,12 +118,13 @@ for which we use the chaotic parameter configuration $a=0.37$, $b=0.2$, and $c=5
 \end{equation}
 with the standard parameter values $\sigma=10$, $\rho=28$, and $\beta=8/3$ \cite{lorenz_deterministic_1963}.
 
-\paragraph{Lorenz-96 system.} The Lorenz-96 system is defined as follows. For $i = 1, \dots, N$:
+\paragraph{Lorenz-96 system.}
+The Lorenz-96 system is defined as follows. For $i = 1, \dots, d$:
 
 \begin{equation}
-    \frac{dx_i}{dt} = (x_{i+1} - x_{i-2})x_{i-1} - x_i + F
+    \dot{x}_i = (x_{i+1} - x_{i-2})x_{i-1} - x_i + F,
 \end{equation}
-with periodic boundary conditions $x_{-1} = x_{N-1}$, $x_0 = x_N$, $x_{N+1} = x_1$ and $N \geq 4$. We set the parameters of the system to $N = 10$ and $F = 8$ (the forcing constant).
+with periodic boundary conditions $x_{-1} = x_{d-1}$, $x_0 = x_d$, $x_{d+1} = x_1$ and $d \geq 4$. We set the parameters of the system to $d = 10$ and $F = 8$ (the forcing constant).
 
 \paragraph{Numerical integration.} The system trajectories were obtained by numerically integrating the governing differential equations using the classical fourth-order Runge-Kutta method with a fixed integration step $\delta t = 0.01$. The trajectory is then sampled every $\Delta t / \delta t$ integration steps, so that consecutive samples are one model timestep $\Delta t$ apart.
 
@@ -145,7 +146,7 @@ To give an intuition, let us imagine a point in phase space that gets perturbed 
     \vert \delta(t) \vert \approx e^{t \lambda} \vert \delta_0 \vert
 \end{equation}
 
-Here, $\lambda$ is the Lyapunov exponent. Since the perturbation vector can have different orientations for which the separation rate also varies, there exists a spectrum of Lyapunov exponents, equal in number to the dimensionality of the system. The largest exponent, $\lambda_{\max}$, is known as the maximal Lyapunov exponent (MLE); a positive $\lambda_{\max}$ indicates that the system is chaotic \cite{noauthor_lyapunov_2026}.
+Here, $\lambda$ is the Lyapunov exponent. Since the perturbation vector can have different orientations for which the separation rate also varies, there exists a spectrum of Lyapunov exponents, equal in number to the dimensionality of the system. The largest exponent, $\lambda_{\max}$, is known as the maximal Lyapunov exponent (MLE); a positive $\lambda_{\max}$ indicates that the system is chaotic \cite{wiki_lyapunov_2026}.
 
 Formally, we can define the maximal Lyapunov exponent as follows.
 
@@ -153,10 +154,10 @@ Formally, we can define the maximal Lyapunov exponent as follows.
     \lambda_{\max} = \lim_{t \rightarrow \infty} \lim_{\vert \delta_0 \vert \rightarrow 0} \frac{1}{t} \ln{\frac{\vert \delta(t) \vert}{\vert \delta_0 \vert}}
 \end{equation}
 
-\paragraph{Lyapunov time.} The inverse of MLE, referred to as Lyapunov time, gives an estimate of rollout length for which predicting system's behavior is reliable. If $\lambda_{\max}$ is positive, that is, the system exhibits chaotic behavior, the system cannot be predicted for more than a few multiples of $\frac{1}{\lambda_{\max}}$ \cite{strogatz_nonlinear_1994}.
+\paragraph{Lyapunov time.} The inverse of the MLE, referred to as the Lyapunov time, gives an estimate of the rollout length for which predicting the system's behavior is reliable. If $\lambda_{\max}$ is positive, that is, the system exhibits chaotic behavior, the system cannot be predicted for more than a few multiples of $\frac{1}{\lambda_{\max}}$ \cite{strogatz_nonlinear_1994}.
 
 \paragraph{Local Lyapunov exponents.}
-MLE is a single scalar averaged over the system trajectory, so it is non-informative in terms of local divergence rates.  Taking the Lorenz-63 system as an example, one could imagine that trajectories in the phase space that start closer to the origin are harder to predict than those that start further away from the center, on the lobes of the butterfly-shaped graph (see Figures~\ref{fig:lorenz-lle-heatmap} and~\ref{fig:lorenz-lle-histogram}). A small perturbation introduced in the central region can produce different subsequent lobe sequences when the trajectory either stays on the same side of the attractor or crosses the origin and switches to the other lobe. This variation is not represented by the global MLE, which summarizes the average expansion rate over the entire attractor.
+The MLE is a single scalar averaged over the system trajectory, so it carries no information about local divergence rates. Taking the Lorenz-63 system as an example, one could imagine that trajectories in the phase space that start closer to the origin are harder to predict than those that start further away from the center, on the lobes of the butterfly-shaped graph (see Figures~\ref{fig:lorenz-lle-heatmap} and~\ref{fig:lorenz-lle-histogram}). A small perturbation introduced in the central region can produce different subsequent lobe sequences when the trajectory either stays on the same side of the attractor or crosses the origin and switches to the other lobe. This variation is not represented by the global MLE, which summarizes the average expansion rate over the entire attractor.
 
 In order to estimate local predictability around a given point on the trajectory, we use local Lyapunov exponents (LLEs). Effectively, LLEs measure short-term perturbation growth in the neighborhood of individual trajectory states. A positive largest LLE indicates local expansion of nearby trajectories and therefore lower local predictability, whereas a negative value indicates local contraction and greater short-term predictability.
 
@@ -168,7 +169,7 @@ LLEs are calculated by evolving small perturbations alongside the system traject
 where $\Delta t$ is the model timestep over which the tangent map is propagated. Positive values indicate local expansion of nearby trajectories, whereas negative values indicate local contraction.
 
 \paragraph{Finite-time Lyapunov exponents.}
-LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a perturbation that has \emph{already} grown in the past is stretched at the current step, not how an arbitrary initial error at $\mathbf{x}_m$ will grow over the forecast window that starts there. This issue motivates the use of the forward \emph{finite-time Lyapunov exponent} (FTLE) instead. The FTLE is anchored at the start state of each sample. It is computed over a window that matches the training horizon, and it measures the worst-case amplification of an initial perturbation over that window. As $T \to \infty$ it converges to the maximal Lyapunov exponent $\lambda_{\max}$ for almost every initial condition, it interpolates between a purely local and a purely global description of predictability.
+LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a perturbation that has \emph{already} grown in the past is stretched at the current step, not how an arbitrary initial error at $\mathbf{x}_m$ will grow over the forecast window that starts there. This issue motivates the use of the forward \emph{finite-time Lyapunov exponent} (FTLE) instead. The FTLE is anchored at the start state of each sample. It is computed over a window that matches the training horizon, and it measures the worst-case amplification of an initial perturbation over that window. As $T \to \infty$, it converges to the maximal Lyapunov exponent $\lambda_{\max}$ for almost every initial condition; it therefore interpolates between a purely local and a purely global description of predictability.
 
 \begin{figure}[t]
     \centering
@@ -180,19 +181,19 @@ LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a pert
 \begin{figure}[t]
     \centering
     \includegraphics[width=\textwidth]{figs/lorenz_lle_histogram.pdf}
-    \caption{Histograms of the local Lyapunov exponents along the Lorenz-63 attractor for the standard parameters $(\sigma, \rho, \beta) = (10, 28, \frac{8}{3})$, computed as in Figure~\ref{fig:lorenz-lle-heatmap} (log-scaled density; red line: mean). The mean of the leading exponent, 0.899, is close to the literature value of the MLE, $\lambda_{\max} = 0.9056$ \cite{geurts_lyapunov_2020}. Obtained distributions are also consistent with those reported by \cite{ayers_supervised_2023}.}
+    \caption{Histograms of the local Lyapunov exponents along the Lorenz-63 attractor for the standard parameters $(\sigma, \rho, \beta) = (10, 28, \frac{8}{3})$, computed as in Figure~\ref{fig:lorenz-lle-heatmap} (log-scaled density; red line: mean). The mean of the leading exponent, 0.899, is close to the literature value of the MLE, $\lambda_{\max} = 0.9056$ \cite{geurts_lyapunov_2020}. Obtained distributions are also consistent with those reported by Ayers et al.~\cite{ayers_supervised_2023}.}
     \label{fig:lorenz-lle-histogram}
 \end{figure}
 
 \subsection{Neural Networks for Dynamical Systems}
 
-In this paper, the trajectory of a chaotic dynamical system is approximated using a simple artificial neural network. Specifically, we use a multi-layer perceptron (MLP) with 3 hidden layers of 10 neurons each, ReLU activations and residual connections, for all three systems. For Rössler, we additionally train a reduced MLP with two hidden layers of 5 neurons, which makes the forecasting task harder (see Section~\ref{sec:results-fixed}). Inputs and targets are z-score normalized with the mean and standard deviation of the training split. The dimensionality of the input and output layers was adjusted as required by the dynamical system. All models are trained with Adam (learning rate $3 \cdot 10^{-4}$, weight decay $10^{-2}$) and a batch size of 64. Fixed-horizon models were trained for 20 and 200 epochs depending on the task.
+In this paper, the trajectory of a chaotic dynamical system is approximated using a simple artificial neural network. Specifically, we use a multi-layer perceptron (MLP) with three hidden layers of 10 neurons each, ReLU activations and residual connections, for all three systems. For Rössler, we additionally train a reduced MLP with two hidden layers of 5 neurons, which makes the forecasting task harder (see Section~\ref{sec:results-fixed}). Inputs and targets are z-score normalized with the mean and standard deviation of the training split. The dimensionality of the input and output layers was adjusted as required by the dynamical system. All models are trained with Adam (learning rate $3 \cdot 10^{-4}$, weight decay $10^{-2}$) and a batch size of 64. Fixed-horizon models were trained for 20 or 200 epochs, depending on the training regime.
 
-The use of an MLP is motivated by the structure of the forecasting problem. The model approximates a low-dimensional one-step transition map, while the required temporal depth is introduced through repeated autoregressive application. Since the full state of each system determines its next state, there is no long input context for an attention mechanism to exploit. Moreover, Transformer-based models have been reported to offer no advantage in forecasting chaotic dynamics, and are often outperformed by considerably simpler architectures \cite{zeng_are_2022}. The MLP therefore provides a smaller and more direct architecture for studying the effect of the temporal horizon without confounding it with architectural choices.
+The use of an MLP is motivated by the structure of the forecasting problem. The model approximates a low-dimensional one-step transition map, while the required temporal depth is introduced through repeated autoregressive application. Since the full state of each system determines its next state, there is no long input context for an attention mechanism to exploit. Moreover, Transformer-based models have been reported to offer no advantage in forecasting chaotic dynamics and are often outperformed by considerably simpler architectures \cite{zeng_are_2022}. The MLP therefore provides a smaller and more direct architecture for studying the effect of the temporal horizon without confounding it with architectural choices.
 
 \subsection{Prediction Horizon as a Design Choice}
 
-Existing work on dynamical system forecasting focuses mainly on training with single-step predictions. Following the existing literature on temporal horizons \cite{aceituno_temporal_2025} and as shown in later results, we argue that it is not an optimal choice and should be replaced with longer forecasts. However, when training chaotic systems with too long prediction horizon, the number of local minima in the loss landscape, called \emph{loss roughness}, grows exponentially with regard to $T$ \cite{aceituno_temporal_2025}, making the problem computationally demanding.
+Existing work on dynamical system forecasting focuses mainly on training with single-step predictions. Following the existing literature on temporal horizons \cite{aceituno_temporal_2025} and as shown in later results, we argue that it is not an optimal choice and should be replaced with longer forecasts. However, when training models of chaotic systems with too long a prediction horizon, the number of local minima in the loss landscape, called \emph{loss roughness}, grows exponentially with $T$ \cite{aceituno_temporal_2025}, making the problem computationally demanding.
 
 The optimal horizon depends on the task and the goals of the model, which are given externally. Therefore, we report two evaluation scopes: (1) the one-step error ($T_{\mathrm{val}}=1$), which follows the conventions in the existing literature, and (2) the error pooled over the validation horizons $T_{\mathrm{val}} = 1, \dots, 10$, which measures an averaged multi-step rollout quality.
 It is not our main objective to design a model that will achieve state-of-the-art performance on the benchmark chaotic dynamical systems; rather, given an arbitrary set of assumptions and hyperparameters or a limited amount of computational resources, we want to show the superiority of the adaptive approach over fixed-horizon models.
@@ -202,7 +203,7 @@ It is not our main objective to design a model that will achieve state-of-the-ar
 
 Following the previous arguments about the importance of finding an appropriate rollout length, our main objective is to \textbf{form an objective rule that could guide the horizon choice}, without the need to search for it empirically by training and validating models with different horizons.
 
-Existing work on the temporal aspect of predictions focuses on empirically searching the horizon from a set of fixed candidates \cite{aceituno_temporal_2025} based on cross-validation performance, on incrementally extending the training horizon in stages up to a predetermined value \cite{zhuang_horizon_2025}, or on deriving a single global interval from the maximal Lyapunov exponent \cite{mikhaeil_difficulty_2022}. To our knowledge, there is no literature discussing what should be the \emph{maximal horizon} $T_{\max}$ considered in training and validation, above which the model always diverges due to the chaotic nature of the approximated system, nor how the horizon should vary between samples. $T_{\max}$ depends on the complexity of the problem: number of learnable parameters, timestep used in the simulation, training time, etc. Furthermore, the choice of $T_{\max}$ influences the choice of the optimal horizon. For example, in a setup where models were trained and cross-validated up to $T_{\max} = 10$ a particular $T_{\mathrm{opt}}^1$ is optimal where its median MSE pooled across $T_\mathrm{val} \in 1, \dots, 10$ is the lowest. But if the same set of models was cross-validated up to $T_{\max} = 20$ then there could exist another optimum $T_{\mathrm{opt}}^2$ where $T_{\mathrm{opt}}^1 < T_{\mathrm{opt}}^2$, because the model trained with $T_{\mathrm{opt}}^1$ diverges when validated on $T_\mathrm{val} \in 11, \dots, 20$.
+Existing work on the temporal aspect of predictions focuses on empirically searching the horizon from a set of fixed candidates \cite{aceituno_temporal_2025} based on cross-validation performance, on incrementally extending the training horizon in stages up to a predetermined value \cite{zhuang_horizon_2025}, or on deriving a single global interval from the maximal Lyapunov exponent \cite{mikhaeil_difficulty_2022}. To our knowledge, there is no literature discussing what should be the \emph{maximal horizon} $T_{\max}$ considered in training and validation, above which the model always diverges due to the chaotic nature of the approximated system, nor how the horizon should vary between samples. $T_{\max}$ depends on the complexity of the problem: number of learnable parameters, timestep used in the simulation, training time, etc. Furthermore, the choice of $T_{\max}$ influences the choice of the optimal horizon. For example, in a setup where models were trained and cross-validated up to $T_{\max} = 10$, a particular $T^*_a$ is optimal, i.e., its median mean squared error (MSE) pooled across $T_\mathrm{val} \in \{1, \dots, 10\}$ is the lowest. But if the same set of models was cross-validated up to $T_{\max} = 20$, then there could exist another optimum $T^*_b > T^*_a$, because the model trained with $T^*_a$ diverges when validated on $T_\mathrm{val} \in \{11, \dots, 20\}$.
 
 We argue that one does not need to perform a grid search with regard to the prediction horizon on a number of fixed-horizon models, but one could use the same amount of computational resources to train one model with an adaptive technique instead. In this way, the horizon is defined as a function of available resources, and we want to train the best model possible given a finite computation budget as an external constraint.
 
@@ -224,7 +225,7 @@ for a number of laps and then switches to the other wing. We simulate a Lorenz-6
 
 The two quantities behave very differently. The lap duration is almost constant: over 514 detected laps, its mean is $0.707$ time units with a standard deviation of only $0.056$, and 90\% of the laps take between $0.64$ and $0.81$ time units. The time the trajectory stays on one wing before switching, in contrast, varies widely, from $0.76$ to $8.06$ time units. Whether the trajectory performs another lap or crosses to the other wing is decided when it passes close to the origin, the region in which the leading local Lyapunov exponent is largest (on average $2.46$ for $|x| < 3$, compared with $-0.61$ for $|x| > 10$ on the outer parts of the lobes; see Figure~\ref{fig:lorenz-lle-heatmap}). A rollout longer than one lap therefore always has to predict at least one such decision, and small errors in the prediction can send the forecast to the wrong wing.
 
-The mean lap duration is therefore a reasonable upper bound for the training rollout of Lorenz-63. Expressed in model steps, it corresponds to about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$, and to $0.707 \cdot \lambda_{\max} \approx 0.64$ of the maximal Lyapunov exponent. Indeed, the cross-validated optimal fixed horizons of Lorenz-63 (8, 6 and 6 steps after 200 epochs, see Section~\ref{sec:results-fixed}) all lie below this bound.
+The mean lap duration is therefore a reasonable upper bound for the training rollout of Lorenz-63. Expressed in model steps, it corresponds to about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$, and to $0.707 \cdot \lambda_{\max} \approx 0.64$ Lyapunov times. Indeed, the cross-validated optimal fixed horizons of Lorenz-63 (8, 6 and 6 steps after 200 epochs, see Section~\ref{sec:results-fixed}) all lie below this bound.
 
 \begin{figure}[h]
     \centering
@@ -234,18 +235,18 @@ The mean lap duration is therefore a reasonable upper bound for the training rol
 \end{figure}
 
 \paragraph{From a hand-crafted to a generic rule.}
-The analysis above relies on the specific geometry of Lorenz-63: it requires knowing the lobe centers and that wing switches are the source of unpredictability. It does not transfer to systems without such a simple structure, e.g. the ten-dimensional Lorenz-96. The Lyapunov time $\frac{1}{\lambda_{\max}}$, on the other hand, can be estimated for any system from its Jacobian and measures directly how long predictions remain reliable. A good optimal horizon estimate is therefore a fixed fraction of the Lyapunov time.
+The analysis above relies on the specific geometry of Lorenz-63: it requires knowing the lobe centers and that wing switches are the source of unpredictability. It does not transfer to systems without such a simple structure, e.g., the ten-dimensional Lorenz-96. The Lyapunov time $\frac{1}{\lambda_{\max}}$, on the other hand, can be estimated for any system from its Jacobian and measures directly how long predictions remain reliable. A natural estimate of the optimal horizon is therefore a fixed fraction of the Lyapunov time.
 
-Predictability, however, also varies along the attractor. We therefore hypothesize that the appropriate horizon depends on the local dynamics: states from which nearby trajectories diverge quickly, i.e. with a large FTLE, should be trained on shorter rollouts, and more predictable states on longer ones. The Lyapunov-mean method (Section~\ref{sec:lm}) combines both ideas by centering sample-wise horizons on a Lyapunov-time-based base horizon and assigning them by the local FTLE. A randomized variant (Section~\ref{sec:lmr}) separates the benefit of this state-dependent assignment from the regularizing effect of merely exposing the model to several rollout lengths.
+Predictability, however, also varies along the attractor. We therefore hypothesize that the appropriate horizon depends on the local dynamics: states from which nearby trajectories diverge quickly, i.e., with a large FTLE, should be trained on shorter rollouts, and more predictable states on longer ones. The Lyapunov-mean method (Section~\ref{sec:lm}) combines both ideas by centering sample-wise horizons on a Lyapunov-time-based base horizon and assigning them by the local FTLE. A randomized variant (Section~\ref{sec:lmr}) separates the benefit of this state-dependent assignment from the regularizing effect of merely exposing the model to several rollout lengths.
 
 \subsection{Fixed-Horizon Baseline}
 \label{sec:fixed-horizon}
 
-Initially, we trained a set of neural networks to approximate the dynamical systems described above using standard parameters (see Section~\ref{sec:dynamical-systems}). During simulation, we used a burn-in period of 10 time units, i.e. we discarded the initial $\lceil \frac{10.0}{\Delta t} \rceil$ steps before the trajectory was properly set on the attractor.
+Initially, we trained a set of neural networks to approximate the dynamical systems described above using the parameters given in Section~\ref{sec:dynamical-systems}. During simulation, we used a burn-in period of 10 time units, i.e., we discarded the initial $\lceil \frac{10.0}{\Delta t} \rceil$ steps so that the trajectory settles on the attractor.
 
-For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and rollout the simulation up to $T_{\max} = 10$ steps, summing up to physical times $\tau = 0.50, 0.80, 1.0$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the autoregressive rollout.
+For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and roll out the simulation up to $T_{\max} = 10$ steps, corresponding to physical times $\tau = 0.50, 0.80, 1.0$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the autoregressive rollout.
 
-We trained 20 MLPs with fixed seeds: (1) for 20 epochs and (2) for 200 epochs; with each training horizon $T \in \{1, \dots, 10\}$ and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). We were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.0$. The Mean Squared Error (MSE) obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
+For each training horizon $T \in \{1, \dots, 10\}$, we trained 20 MLPs with fixed seeds, (1) for 20 epochs and (2) for 200 epochs, and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). We were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.0$. The MSE obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
 
 Based on cross-validation performance, we report two horizon values for which the median MSE was minimal: (1) validated only at $T_{\mathrm{val}} = 1$ and (2) across all $T_{\mathrm{val}}$. This is our baseline for comparison with the adaptive horizon models.
 
@@ -259,9 +260,9 @@ Based on cross-validation performance, we report two horizon values for which th
 \subsection{Linear Horizon Scheduler}
 \label{sec:ls}
 
-First, we tried a naive approach to finding the optimal horizon by setting up a \textbf{linear scheduler (LS)}, which starts at $T=1$ and increases $T$ by one every 20 epochs up to $T_{\max} = 10$. Similarly to the fixed-horizon setup, we trained 20 adaptive models for each system and $\Delta t$ for 200 epochs. The total number of epochs is equal to the full 20-epoch fixed-horizon sweep to match the computation budget ($10 \times 20$ epochs vs. 200 epochs). The optimizer state is preserved across all $T$ changes.
+First, we tried a naive approach to finding the optimal horizon by setting up a \textbf{linear scheduler (LS)}, which starts at $T=1$ and increases $T$ by one every 20 epochs up to $T_{\max} = 10$. Similarly to the fixed-horizon setup, we trained 20 adaptive models for each system and $\Delta t$ for 200 epochs. The total number of epochs is equal to the full 20-epoch fixed-horizon sweep to match the computation budget ($10 \times 20$ epochs vs.\ 200 epochs). The optimizer state is preserved across all $T$ changes.
 
-In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation error of LS models is often much larger than that of the fixed-horizon optimum, since the choice of $T_{\max} = 10$ is arbitrary and does not reflect the system's uncertainty in any way. Due to the long horizons enforced in the last stages of training, errors explode and models diverge. A better approach would therefore be to use the Lyapunov time of the system to guide the choice of $T_{\max}$. As can be observed in Figure~\ref{fig:validation-curves}, the predictability of the system depends directly on its complexity. In Lorenz-63 and Lorenz-96 which have a higher MLE and are therefore more chaotic than Rössler, $\tau = 0.80$ is already too long of a rollout, so training with this horizon degrades the model. Meanwhile, the Rössler system can be effectively trained with $\tau = 0.80$, making LS models perform considerably well.
+In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation error of LS models is often much larger than that of the fixed-horizon optimum, since the choice of $T_{\max} = 10$ is arbitrary and does not reflect the system's uncertainty in any way. Due to the long horizons enforced in the last stages of training, errors explode and models diverge. A better approach would therefore be to use the Lyapunov time of the system to guide the choice of $T_{\max}$. As can be observed in Figure~\ref{fig:validation-curves}, the predictability of the system depends directly on its complexity. In Lorenz-63 and Lorenz-96, which have a higher MLE and are therefore more chaotic than Rössler, $\tau = 0.80$ is already too long a rollout, so training with this horizon degrades the model. Meanwhile, the Rössler system can be effectively trained with $\tau = 0.80$, making LS models perform reasonably well.
 
 \subsection{Cross-Validation Minimum Search}
 \label{sec:cv}
@@ -274,13 +275,12 @@ For the aforementioned reasons, we draw the conclusion that the $T$ increase mus
 
 \paragraph{Selection and training phase.} When the stage at $T_{\max} = 10$ ends, the candidate with the lowest cached score is selected (ties are resolved in favor of the larger horizon), its parameters are restored, and training continues at the selected horizon until the total of 200 epochs is reached.
 
-This approach is still not ideal, as it favors longer horizons due to more training time. Horizons that would win in an offline cross-validation do not receive enough training time, so later candidates usually score lower MSE, and the picked checkpoint is suboptimal. Note that the CV method is not identical and cannot be confused with the cross-validation that we performed after training (see Section~\ref{sec:fixed-horizon}).
+This approach is still not ideal, as it favors longer horizons due to more training time. Horizons that would win in an offline cross-validation do not receive enough training time, so later candidates usually score lower MSE, and the picked checkpoint is suboptimal. Note that the CV method should not be confused with the offline cross-validation that we performed after training (see Section~\ref{sec:fixed-horizon}).
 
 \subsection{Lyapunov-Mean Horizon}
 \label{sec:lm}
 
-Although the approaches described above give an initial idea of adaptive horizon implementation, they are purely empirical and lack the information from the system.
-To incorporate information on general predictability and local instability into the training, we introduce the \textbf{Lyapunov-mean (LM)} method, which assigns each training sample its own prediction horizon from a narrow range centered around a MLE-based horizon (see Section~\ref{sec:lm-idea} for the motivation).
+Although the approaches described above give an initial idea of adaptive horizon implementation, they are purely empirical and do not use any information about the dynamics of the system. To incorporate information on general predictability and local instability into the training, we introduce the \textbf{Lyapunov-mean (LM)} method, which assigns each training sample its own prediction horizon from a narrow range centered on an MLE-based horizon (see Section~\ref{sec:lm-idea} for the motivation).
 
 \paragraph{Base horizon.} The base horizon is a fraction of the Lyapunov time (reciprocal of the MLE, see Section~\ref{sec:lm-idea}), expressed in model steps:
 
@@ -330,11 +330,11 @@ Each sample is rolled out autoregressively for its own horizon $T_m$, and its lo
 
 \paragraph{Note.} Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
-\paragraph{Training budget.} LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e. single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
+\paragraph{Training budget.} LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
 \[
 B = \sum_{T=1}^{T_{\max}} 20 \cdot N_T \cdot T.
 \]
-A training batch of LM is charged its batch size times the longest horizon in the batch since the batch is rolled out to that length. Training stops before the first batch that would exceed $B$, regardless of the number of epochs.
+A training batch of LM is charged its batch size times the longest horizon in the batch, since the batch is rolled out to that length. Training stops before the first batch that would exceed $B$, regardless of the number of epochs.
 
 \subsubsection{Randomized Lyapunov-Mean Control}
 \label{sec:lmr}
@@ -353,7 +353,7 @@ where $S_N$ denotes the set of permutations of the sample indices. The permutati
 
 LM uses the local FTLE to decide \emph{how far} each sample is rolled out. The \textbf{FTLE-weighted loss (WL)} uses it instead to decide \emph{how much each rollout step counts}. All samples are rolled out for the same horizon, the Lyapunov-based base horizon $T_{\mathrm{base}}$ (Eq.~\eqref{eq:t-base}), but the error at each step is weighted.
 
-The idea is that, after $j$ steps, a sample whose initial state has a large FTLE has already used up more of its predictability than a sample in a stable region. For every sample and step, WL therefore estimates how many Lyapunov times have elapsed, i.e. the FTLE of the initial state times the elapsed time $j\,\Delta t$. Steps within the predictable range keep full weight; beyond it, the weight decreases smoothly towards a small minimum, so late steps never drop out of the loss completely. In addition, the one-step error is always included with a fixed weight, which anchors the model to accurate local dynamics.
+The idea is that, after $j$ steps, a sample whose initial state has a large FTLE has already used up more of its predictability than a sample in a stable region. For every sample and step, WL therefore estimates how many Lyapunov times have elapsed, i.e., the FTLE of the initial state times the elapsed time $j\,\Delta t$. Steps within the predictable range keep full weight; beyond it, the weight decreases smoothly towards a small minimum, so late steps never drop out of the loss completely. In addition, the one-step error is always included with a fixed weight, which anchors the model to accurate local dynamics.
 
 As a result, samples from stable regions are trained on the whole rollout, while samples from unstable regions are trained mainly on their first few steps. The exact formulation and parameter values are given in Appendix~\ref{app:weighted-loss}.
 
@@ -490,7 +490,7 @@ On both Lorenz systems, WL has the shortest VPT of all 200-epoch methods that tr
 To test whether the missing gains on Rössler are due to the task being too easy (Section~\ref{sec:results-fixed}), we repeated all Rössler experiments with the $5 \times 5$ MLP (Table~\ref{tab:results-rossler_small}). The estimated MLE does not depend on the model, so the base horizon of LM is again clipped to $T_{\mathrm{base}} = 10$.
 
 \paragraph{The horizon matters again.}
-After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ compared with $9, 8, 7$ for the standard model), and the error rises steeply beyond it. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e. training of the small model is less reliable.
+After 20 epochs, the optimal fixed horizon moves from the boundary into the interior of the search range ($T^*_{\mathrm{all}} = 7, 5, 4$ compared with $9, 8, 7$ for the standard model), and the error rises steeply beyond it. After 200 epochs, the optimum stays at long horizons ($T^*_{\mathrm{all}} = 10, 8, 10$), consistent with the observation that long-horizon training needs more time to pay off (Section~\ref{sec:results-fixed}). The spread over seeds is much larger than for the $3 \times 10$ model, i.e., training of the small model is less reliable.
 
 \paragraph{Equal budget.}
 In contrast to the $3 \times 10$ model, the budget-matched LM now beats the best 20-epoch fixed-horizon model over the full validation window at every timestep. At $T_{\mathrm{val}} = 1$, it is better at $\Delta t = 0.05$ and $0.1$ and comparable at $\Delta t = 0.08$. Due to the large spread over the seeds, the differences are not significant after the Holm correction.
@@ -530,28 +530,28 @@ Overall, once the Rössler task constrains the model, LM gives the same kind of 
 Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the three result tables, and Figure~\ref{fig:method-curves} shows how the errors develop along the rollout. In short:
 \begin{itemize}
     \item \textbf{Fixed horizon:} the optimal horizon depends on the training budget and on the evaluation scope, so it must be searched for again whenever either changes.
-    \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Rössler at the smallest timestep and on Lorenz-96. CV systematically selects too long horizons.
+    \item \textbf{LS and CV:} the curriculum-based methods are the least reliable and collapse on Rössler at the smallest timestep and on Lorenz-96. CV systematically selects horizons that are too long.
     \item \textbf{LM:} under an equal budget, it matches or beats the best fixed-horizon model on both Lorenz systems, with the gain growing along the rollout. At equal training length, it stays close to an oracle choice of the fixed horizon.
     \item \textbf{LMR:} the FTLE-based assignment helps only on Lorenz-63; the main benefit of LM comes from the choice of the mean horizon.
     \item \textbf{WL:} worse than both the fixed-horizon optimum and LM everywhere.
 \end{itemize}
 
 \paragraph{Advantage of adaptive methods.}
-Adaptive techniques show advantage over the fixed baseline when a given approximation problem is constrained by either its complexity or limited amount of computation. On Rössler, the budget-matched LM gives no gain with the $3 \times 10$ MLP, but beats the best fixed-horizon model of the sweep at every timestep once the capacity is reduced to $5 \times 5$ (Section~\ref{sec:results-rossler-small}).
+Adaptive techniques show an advantage over the fixed baseline when a given approximation problem is constrained by either model capacity or a limited amount of computation. On Rössler, the budget-matched LM gives no gain with the $3 \times 10$ MLP, but beats the best fixed-horizon model of the sweep at every timestep once the capacity is reduced to $5 \times 5$ (Section~\ref{sec:results-rossler-small}).
 
 \section{Conclusion}
 
-We demonstrated the advantages of an adaptive approach in finding optimal temporal horizons for chaotic dynamical series forecasting. First, we show that this optimum depends on the task considered and the available compute budget. Treating optimal horizons as the function of computational resources, we developed an algorithm to find a good forecasting horizon without training and validating a set of fixed models, but relying solely on the estimate of the system's maximal Lyapunov exponent. Horizons that this method yield overlap to a large extent with the horizons chosen by cross-validation of the fixed models, which represent the commonly used approach and form our baseline.
+We demonstrated the advantages of an adaptive approach in finding optimal temporal horizons for forecasting chaotic dynamical systems. First, we show that this optimum depends on the task considered and the available compute budget. Treating optimal horizons as a function of computational resources, we developed an algorithm to find a good forecasting horizon without training and validating a set of fixed models, but relying solely on the estimate of the system's maximal Lyapunov exponent. Horizons that this method yields overlap to a large extent with the horizons chosen by cross-validation of the fixed models, which represent the commonly used approach and form our baseline.
 
-We also tried to incorporate the information about local instability into training, by mapping finite-time Lyapunov exponents to sample-wise horizons. However, this approach did not show any improvement in the dynamical systems considered, giving similar results to its variant with randomized mapping.
+We also tried to incorporate the information about local instability into training by mapping finite-time Lyapunov exponents to sample-wise horizons. However, this approach did not show any improvement in the dynamical systems considered, giving similar results to its variant with randomized mapping.
 
 \section{Future Work}
 
 In the future, we would like to extend the idea of Lyapunov-based horizon search by further investigating why the FTLE-to-horizon mapping does not improve the forecasting and what could be a possible replacement for FTLEs in the sample-wise horizon assignment.
 
-In terms of MLE-informed horizon calculation, a possible extension could investigate where the empirically found Lyapunov fraction parameter $\gamma$ comes from and replace the hard-coded value with an adaptive mechanism. In the current implementation of base horizon, there is no notion of neither the computational budget nor the goal validation horizon, so it is task- and budget-agnostic.
+In terms of MLE-informed horizon calculation, a possible extension could investigate where the empirically found Lyapunov fraction parameter $\gamma$ comes from and replace the hard-coded value with an adaptive mechanism. In the current implementation of the base horizon, there is no notion of either the computational budget or the target validation horizon, so it is task- and budget-agnostic.
 
-A good idea would be to try benchmarking the LM method on real-world datasets or discrete chaotic systems. Here comes the advantage of FTLE-based mapping, as when we are dealing with real data and not synthetic systems with its governing equations, FTLEs can still be calculated with ease while LLE calculation would take additional steps.
+A good idea would be to try benchmarking the LM method on real-world datasets or discrete chaotic systems. Here comes the advantage of FTLE-based mapping, as when we are dealing with real data and not synthetic systems with known governing equations, FTLEs can still be calculated with ease while LLE calculation would take additional steps.
 
 \clearpage
 \bibliographystyle{plain}
@@ -580,7 +580,7 @@ SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget
 
 This section gives the full formulation of the FTLE-weighted loss introduced in Section~\ref{sec:wl}.
 
-To further improve the performance of the system by measuring how nearby trajectories diverge at a certain point on the trajectory, we introduced the idea of soft-weighted loss over a fixed rollout horizon. The horizon is the Lyapunov-based base horizon $T_{\mathrm{base}}$ from Eq.~\eqref{eq:t-base}, and the FTLE window equals this horizon, $W = T_{\mathrm{base}}$.
+To further improve the performance of the model by measuring how nearby trajectories diverge at a certain point on the trajectory, we introduced the idea of soft-weighted loss over a fixed rollout horizon. The horizon is the Lyapunov-based base horizon $T_{\mathrm{base}}$ from Eq.~\eqref{eq:t-base}, and the FTLE window equals this horizon, $W = T_{\mathrm{base}}$.
 
 For each initial state $\mathbf{x}_m$, the model rolls forward autoregressively for $T_{\mathrm{base}}$ steps, and the FTLE $\Lambda_m$ is calculated, measuring a short-window maximum local expansion:
 
@@ -603,11 +603,11 @@ s_{m, j} = \max(\Lambda_m, 0) \cdot j \, \Delta t.
 Then, soft weights are assigned:
 
 \[
-a_{m, j} = \max \left( \mathrm{sigmoid} \left( \frac{\rho - s_{m, j}}{\theta} \right), w_{\min} \right),
+w_{m, j} = \max \left( \mathrm{sigmoid} \left( \frac{\kappa - s_{m, j}}{\theta} \right), w_{\min} \right),
 \]
 with default parameter values:
 \begin{itemize}
-    \item $\rho = 1.0$: Predictability budget threshold. A larger $\rho$ means high weight for longer rollout steps even for unstable states.
+    \item $\kappa = 1.0$: Predictability budget threshold. A larger $\kappa$ means high weight for longer rollout steps even for unstable states.
     \item $\theta = 0.25$: Temperature (softness of the cutoff). Small temperature makes the transition sharp, large temperature makes the weight decay gradually.
     \item $w_{\min} = 0.05$: Minimum unnormalized weight. Prevents the long-horizon errors from vanishing.
 \end{itemize}
@@ -615,7 +615,7 @@ with default parameter values:
 The loss is calculated as follows:
 
 \[
-L_m = \alpha \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+1}, \mathbf{x}_{m+1}) + (1 - \alpha) \sum_{j = 1}^{T_{\mathrm{base}}} a_{m, j} \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+j}, \mathbf{x}_{m+j}),
+L_m = \alpha \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+1}, \mathbf{x}_{m+1}) + (1 - \alpha) \sum_{j = 1}^{T_{\mathrm{base}}} w_{m, j} \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+j}, \mathbf{x}_{m+j}),
 \]
 where $\alpha = 0.25$ is the strength of the one-step anchor. A larger $\alpha$ prioritizes accurate local dynamics.
 
