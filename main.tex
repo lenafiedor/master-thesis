@@ -5,6 +5,15 @@
 \usepackage{makecell}
 \usepackage{booktabs}
 \usepackage{adjustbox}
+\usepackage[section]{placeins}
+
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.7}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
 
 \title{Adaptive Temporal Horizons \\ in Auto-Regressive Models}
 \author{Lena Fiedor}
@@ -175,14 +184,14 @@ LLEs are \emph{backward-looking}: the LLE at $\mathbf{x}_m$ describes how a pert
 \end{equation}
 where $M_W(\mathbf{x}_m)$ is the tangent map of the flow over the time $W \Delta t$ and $\sigma_{\max}$ is its largest singular value. As $W \to \infty$, $\Lambda_W$ converges to the maximal Lyapunov exponent $\lambda_{\max}$ for almost every initial condition; it therefore interpolates between a purely local and a purely global description of predictability.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figs/lorenz_lle_heatmap.pdf}
     \caption{Lorenz-63 attractor colored by the local Lyapunov exponents $\lambda^{\mathrm{loc}}_1$, $\lambda^{\mathrm{loc}}_2$ and $\lambda^{\mathrm{loc}}_3$, computed with $\Delta t = 0.01$ along a trajectory of 50\,000 steps. For $\lambda^{\mathrm{loc}}_1$ and $\lambda^{\mathrm{loc}}_2$, the color scale is centered at zero (blue: local contraction, red: local expansion); $\lambda^{\mathrm{loc}}_3$ is negative everywhere.}
     \label{fig:lorenz-lle-heatmap}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figs/lorenz_lle_histogram.pdf}
     \caption{Histograms of the local Lyapunov exponents along the Lorenz-63 attractor for the standard parameters $(\sigma, \rho, \beta) = (10, 28, \frac{8}{3})$, computed as in Figure~\ref{fig:lorenz-lle-heatmap} (log-scaled density; red line: mean). The mean of the leading exponent, 0.899, is close to the literature value of the MLE, $\lambda_{\max} = 0.9056$ \cite{geurts_lyapunov_2020}. Obtained distributions are also consistent with those reported by Ayers et al.~\cite{ayers_supervised_2023}.}
@@ -231,7 +240,7 @@ The two quantities behave very differently. The lap duration is almost constant:
 
 The mean lap duration is therefore a reasonable upper bound for the training rollout of Lorenz-63. Expressed in model steps, it corresponds to about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$, and to $0.707 \cdot \lambda_{\max} \approx 0.64$ Lyapunov times. Indeed, the cross-validated optimal fixed horizons of Lorenz-63 (8, 6 and 6 steps after 200 epochs, see Section~\ref{sec:results-fixed}) all lie below this bound.
 
-\begin{figure}[h]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figs/lorenz_laps.pdf}
     \caption{Lap analysis of the Lorenz-63 attractor ($\Delta t = 0.01$, 50\,000 steps). Left and center: the attractor and the $x$ coordinate over a window of 12 time units, with the wing crossings ($x = 0$, orange) and the completed laps around the lobe centers (blue) marked. Right: distribution of the lap duration over the whole trajectory (red line: mean).}
@@ -254,7 +263,7 @@ For each training horizon $T \in \{1, \dots, 10\}$, we trained 20 MLPs with fixe
 
 Based on cross-validation performance, we report two horizon values for which the median MSE was minimal: (1) validated only at $T_{\mathrm{val}} = 1$ and (2) across all $T_{\mathrm{val}}$. This is our baseline for comparison with the adaptive horizon models.
 
-\begin{figure}[t]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{figs/validation_curves.pdf}
     \caption{Cross-validation curves of fixed-horizon models trained for 200 epochs, for every system (rows) and timestep (columns). The x-axis shows the training horizon $T$ and the y-axis the median validation MSE over 20 seeds (normalized coordinates, log scale). Each line corresponds to one validation horizon $T_{\mathrm{val}}$, with the error averaged over $T_{\mathrm{val}}$ rollout steps; the enlarged marker on each line indicates the training horizon with the lowest error for that $T_{\mathrm{val}}$.}
@@ -388,14 +397,14 @@ The following subsections go through the methods in the order in which they were
 
 Fixed-horizon models are trained at a single horizon $T \in \{1, \dots, 10\}$ for 20 or 200 epochs; the best of them serves as the reference for all other methods (Section~\ref{sec:fixed-horizon}).
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/fixed_horizon_curves.pdf}
   \caption{Median validation MSE of fixed-horizon models vs.\ training horizon $T$, pooled over all $T_{\mathrm{val}}$, relative to the best 200-epoch model. Large markers: $T^*$; dashed line: $T_{\mathrm{base}}$ of LM.}
   \label{fig:fixed-horizon-curves}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/optimal_horizon_budget.pdf}
   \caption{Optimal fixed horizon $T^*$ after 20 and 200 epochs, with the interquartile range over seeds (top), and the excess MSE of training 200 epochs at $T^*_{20}$ instead of $T^*_{200}$ (bottom). Left: $T_{\mathrm{val}}=1$; right: all $T_{\mathrm{val}}$.}
@@ -470,7 +479,7 @@ It does not improve on the fixed-horizon optimum on any system or timestep, and 
 \subsection{Long-Horizon Forecasts}
 \label{sec:long-horizon}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/vpt.pdf}
   \caption{Valid prediction time at $\epsilon = 0.5$ in Lyapunov times (median over seeds and interquartile range) under an equal budget (left) and at 200 epochs (right). Fixed-horizon models at $T^*_{\mathrm{all}}$.}
@@ -510,21 +519,21 @@ Overall, once the Rössler task constrains the model, LM gives the same kind of 
 \subsection{Summary Across Methods}
 \label{sec:summary}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_budget.pdf}
   \caption{Equal budget: median MSE ($\times 10^{-3}$) of the best 20-epoch fixed-horizon model and of budget-based LM, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom); bold: best.}
   \label{fig:mse-heatmap-budget}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/mse_heatmap_200.pdf}
   \caption{200 epochs: median MSE ($\times 10^{-3}$) of the best fixed-horizon model and of all adaptive methods, at $T_{\mathrm{val}}=1$ (top) and pooled over all $T_{\mathrm{val}}$ (bottom); bold: best.}
   \label{fig:mse-heatmap-200}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{figs/method_curves.pdf}
   \caption{Median validation MSE vs.\ validation horizon $T_{\mathrm{val}}$ for every method. Fixed-horizon models at $T^*_{\mathrm{all}}$ (dashed).}
