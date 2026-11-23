@@ -92,7 +92,7 @@ The following formula provides a general framework for describing differential e
 \]
 where the overdot denotes differentiation with respect to $t$.
 
-We focus particularly on chaotic systems, a subset of dynamical systems that exhibits extreme sensitivity to initial conditions and can be characterized by its chaotic attractor, meaning a set of points towards which the system evolves \cite{aceituno_temporal_2025}.
+We focus particularly on chaotic systems, a subset of dynamical systems that exhibits extreme sensitivity to initial conditions and can be characterized by its chaotic attractor, meaning a set of points towards which the system evolves \cite{strogatz_nonlinear_1994}.
 
 One clarification that must be provided concerns the concept of time in the simulations. In order to approximate dynamical systems with neural networks, one needs to discretize time. In this paper, separate symbols are used to denote different time concepts.
 
@@ -158,7 +158,7 @@ To give an intuition, let us imagine a point in phase space that gets perturbed 
     \vert \delta(t) \vert \approx e^{t \lambda} \vert \delta_0 \vert
 \end{equation}
 
-Here, $\lambda$ is the Lyapunov exponent. Since the perturbation vector can have different orientations for which the separation rate also varies, there exists a spectrum of Lyapunov exponents, equal in number to the dimensionality of the system. The largest exponent, $\lambda_{\max}$, is known as the maximal Lyapunov exponent (MLE); a positive $\lambda_{\max}$ indicates that the system is chaotic \cite{wiki_lyapunov_2026}.
+Here, $\lambda$ is the Lyapunov exponent. Since the perturbation vector can have different orientations for which the separation rate also varies, there exists a spectrum of Lyapunov exponents, equal in number to the dimensionality of the system. The largest exponent, $\lambda_{\max}$, is known as the maximal Lyapunov exponent (MLE); a positive $\lambda_{\max}$ indicates that the system is chaotic \cite{strogatz_nonlinear_1994}.
 
 Formally, we can define the maximal Lyapunov exponent as follows.
 
@@ -284,7 +284,7 @@ In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation er
 \subsection{Cross-Validation Minimum Search}
 \label{sec:cv}
 
-Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other (see \cite{aceituno_temporal_2025}).
+Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other \cite{aceituno_temporal_2025}.
 
 For the aforementioned reasons, we draw the conclusion that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes due to too long rollouts. To determine where the linear scheduler should stop, we track the validation error during training and select the horizon at which it is minimal (see Figure~\ref{fig:validation-curves}). In this approach, the goal is to select the model with a minimal multi-step validation error over the first $T_{\max} = 10$ rollout steps. We call it \textbf{the cross-validation (CV)} method, which consists of a curriculum phase followed by a training phase at the selected horizon. Note that this method is more of a sanity check and still does not incorporate any information about the uncertainty of the system into the training.
 
