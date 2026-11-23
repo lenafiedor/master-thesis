@@ -109,7 +109,8 @@ The relationship between these terms gives $\tau = \Delta t \cdot T$.
 
 As benchmarks, we selected three chaotic systems: the three-dimensional Rössler and Lorenz-63 attractors and the ten-dimensional Lorenz-96 system. Their dynamics have been extensively studied, allowing us to draw on previous work to obtain reliable ground-truth reference values \cite{ayers_supervised_2023}.
 
-\paragraph{Rössler system.} The Rössler system was designed as a comparatively simple continuous-time model of chaos and is governed by
+\paragraph{Rössler system.}
+The Rössler system was designed as a comparatively simple continuous-time model of chaos and is governed by
 
 \begin{equation}
     \dot{x}=-y-z, \qquad
@@ -118,7 +119,8 @@ As benchmarks, we selected three chaotic systems: the three-dimensional Rössler
 \end{equation}
 for which we use the chaotic parameter configuration $a=0.37$, $b=0.2$, and $c=5.7$ \cite{rossler_equation_1976}. Compared with the frequently used $a=0.2$, the larger value of $a$ gives a more strongly chaotic attractor with a larger maximal Lyapunov exponent.
 
-\paragraph{Lorenz-63 system.} The Lorenz-63 system, originally introduced as a simplified model of atmospheric convection, is defined as
+\paragraph{Lorenz-63 system.}
+The Lorenz-63 system, originally introduced as a simplified model of atmospheric convection, is defined as
 
 \begin{equation}
     \dot{x}=\sigma(y-x), \qquad
@@ -135,7 +137,8 @@ The Lorenz-96 system is defined as follows. For $i = 1, \dots, d$:
 \end{equation}
 with periodic boundary conditions $x_{-1} = x_{d-1}$, $x_0 = x_d$, $x_{d+1} = x_1$ and $d \geq 4$. We set the parameters of the system to $d = 10$ and $F = 8$ (the forcing constant).
 
-\paragraph{Numerical integration.} The system trajectories were obtained by numerically integrating the governing differential equations using the classical fourth-order Runge-Kutta method with a fixed integration step $\delta t = 0.01$. The trajectory is then sampled every $\Delta t / \delta t$ integration steps, so that consecutive samples are one model timestep $\Delta t$ apart.
+\paragraph{Numerical integration.}
+The system trajectories were obtained by numerically integrating the governing differential equations using the classical fourth-order Runge-Kutta method with a fixed integration step $\delta t = 0.01$. The trajectory is then sampled every $\Delta t / \delta t$ integration steps, so that consecutive samples are one model timestep $\Delta t$ apart.
 
 \subsection{Global and Local Lyapunov Exponents}
 
@@ -163,7 +166,8 @@ Formally, we can define the maximal Lyapunov exponent as follows.
     \lambda_{\max} = \lim_{t \rightarrow \infty} \lim_{\vert \delta_0 \vert \rightarrow 0} \frac{1}{t} \ln{\frac{\vert \delta(t) \vert}{\vert \delta_0 \vert}}
 \end{equation}
 
-\paragraph{Lyapunov time.} The inverse of the MLE, referred to as the Lyapunov time, gives an estimate of the rollout length for which predicting the system's behavior is reliable. If $\lambda_{\max}$ is positive, that is, the system exhibits chaotic behavior, the system cannot be predicted for more than a few multiples of $\frac{1}{\lambda_{\max}}$ \cite{strogatz_nonlinear_1994}.
+\paragraph{Lyapunov time.}
+The inverse of the MLE, referred to as the Lyapunov time, gives an estimate of the rollout length for which predicting the system's behavior is reliable. If $\lambda_{\max}$ is positive, that is, the system exhibits chaotic behavior, the system cannot be predicted for more than a few multiples of $\frac{1}{\lambda_{\max}}$ \cite{strogatz_nonlinear_1994}.
 
 \paragraph{Local Lyapunov exponents.}
 The MLE is a single scalar averaged over the system trajectory, so it carries no information about local divergence rates. Taking the Lorenz-63 system as an example, one could imagine that trajectories in the phase space that start closer to the origin are harder to predict than those that start further away from the center, on the lobes of the butterfly-shaped graph (see Figures~\ref{fig:lorenz-lle-heatmap} and~\ref{fig:lorenz-lle-histogram}). A small perturbation introduced in the central region can produce different subsequent lobe sequences when the trajectory either stays on the same side of the attractor or crosses the origin and switches to the other lobe. This variation is not represented by the global MLE, which summarizes the average expansion rate over the entire attractor.
@@ -273,7 +277,7 @@ Based on cross-validation performance, we report two horizon values for which th
 \subsection{Linear Horizon Scheduler}
 \label{sec:ls}
 
-First, we tried a naive approach to finding the optimal horizon by setting up a \textbf{linear scheduler (LS)}, which starts at $T=1$ and increases $T$ by one every 20 epochs up to $T_{\max} = 10$. Similarly to the fixed-horizon setup, we trained 20 adaptive models for each system and $\Delta t$ for 200 epochs. The total number of epochs is equal to the full 20-epoch fixed-horizon sweep to match the computation budget ($10 \times 20$ epochs vs.\ 200 epochs). The optimizer state is preserved across all $T$ changes.
+First, we tried a naive approach to finding the optimal horizon by setting up a \textbf{linear scheduler (LS)}, which starts at $T=1$ and increases $T$ by one every 20 epochs up to $T_{\max} = 10$. Similarly to the fixed-horizon setup, we trained 20 adaptive models for each system and $\Delta t$ for 200 epochs. The total number of epochs is equal to the full 20-epoch fixed-horizon sweep to match the computation budget ($10 \times 20$ epochs vs.\ 200 epochs). The optimizer state is preserved across all $T$ changes. In each stage, the training loss is the same as for a fixed-horizon model at the current $T$, i.e., the MSE averaged over the $T$ steps of the rollout.
 
 In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation error of LS models is often much larger than that of the fixed-horizon optimum, since the choice of $T_{\max} = 10$ is arbitrary and does not reflect the system's uncertainty in any way. Due to the long horizons enforced in the last stages of training, errors explode and models diverge. A better approach would therefore be to use the Lyapunov time of the system to guide the choice of $T_{\max}$. As can be observed in Figure~\ref{fig:validation-curves}, the predictability of the system depends directly on its complexity. In Lorenz-63 and Lorenz-96, which have a higher MLE and are therefore more chaotic than Rössler, $\tau = 0.80$ is already too long a rollout, so training with this horizon degrades the model. Meanwhile, the Rössler system can be effectively trained with $\tau = 0.80$, making LS models perform reasonably well.
 
@@ -282,11 +286,13 @@ In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation er
 
 Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other (see \cite{aceituno_temporal_2025}).
 
-For the aforementioned reasons, we draw the conclusion that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes due to too long rollouts. To determine where the linear scheduler should stop, we track the validation error during training and select the horizon at which it is minimal (see Figure~\ref{fig:validation-curves}). In this approach, the goal is to select the model with a minimal validation error pooled across all $T_{\mathrm{val}}$. We call it \textbf{the cross-validation (CV)} method, which consists of a curriculum phase followed by a training phase at the selected horizon. Note that this method is more of a sanity check and still does not incorporate any information about the uncertainty of the system into the training.
+For the aforementioned reasons, we draw the conclusion that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes due to too long rollouts. To determine where the linear scheduler should stop, we track the validation error during training and select the horizon at which it is minimal (see Figure~\ref{fig:validation-curves}). In this approach, the goal is to select the model with a minimal multi-step validation error over the first $T_{\max} = 10$ rollout steps. We call it \textbf{the cross-validation (CV)} method, which consists of a curriculum phase followed by a training phase at the selected horizon. Note that this method is more of a sanity check and still does not incorporate any information about the uncertainty of the system into the training.
 
-\paragraph{Curriculum phase.} Training starts at a horizon of one. After each epoch, the model is evaluated on the validation split using the MSE averaged over a fixed rollout of $T_{\mathrm{val}} = 1, \dots, 10$ steps, and this score is smoothed with a moving average over the last three epochs at the current horizon. A stage (one value of $T$) lasts at least five and at most twenty epochs. After the minimum duration, a stage ends once the smoothed score has failed to improve by more than 1\% (relative to its best value within the stage) for three consecutive epochs. At each stage boundary, the current parameters and the smoothed score are cached as the single candidate for that horizon, and $T$ is increased by one. The optimizer state is kept across changes of $T$.
+\paragraph{Curriculum phase.}
+Training starts at a horizon of one, and at every stage the training loss is the MSE averaged over the $T$ steps of the rollout at the current horizon. After each epoch, the model is evaluated on the validation split using the MSE averaged uniformly over the steps of a single 10-step rollout (i.e., the validation error at $T_{\mathrm{val}} = 10$). Note that this score weights all steps equally and therefore differs slightly from the error pooled over $T_{\mathrm{val}} = 1, \dots, 10$ used for reporting (Section~\ref{sec:reporting}), which gives more weight to early steps. The score is smoothed with a moving average over the last three epochs at the current horizon. A stage (one value of $T$) lasts at least five and at most twenty epochs. After the minimum duration, a stage ends once the smoothed score has failed to improve by more than 1\% (relative to its best value within the stage) for three consecutive epochs. At each stage boundary, the current parameters and the smoothed score are cached as the single candidate for that horizon, and $T$ is increased by one. The optimizer state is kept across changes of $T$.
 
-\paragraph{Selection and training phase.} When the stage at $T_{\max} = 10$ ends, the candidate with the lowest cached score is selected (ties are resolved in favor of the larger horizon), its parameters are restored, and training continues at the selected horizon until the total of 200 epochs is reached.
+\paragraph{Selection and training phase.}
+When the stage at $T_{\max} = 10$ ends, the candidate with the lowest cached score is selected (ties are resolved in favor of the larger horizon), its parameters are restored, and training continues at the selected horizon until the total of 200 epochs is reached.
 
 This approach is still not ideal, as it favors longer horizons due to more training time. Horizons that would win in an offline cross-validation do not receive enough training time, so later candidates usually score lower MSE, and the picked checkpoint is suboptimal. Note that the CV method should not be confused with the offline cross-validation that we performed after training (see Section~\ref{sec:fixed-horizon}).
 
@@ -295,7 +301,8 @@ This approach is still not ideal, as it favors longer horizons due to more train
 
 Although the approaches described above give an initial idea of adaptive horizon implementation, they are purely empirical and do not use any information about the dynamics of the system. To incorporate information on general predictability and local instability into the training, we introduce the \textbf{Lyapunov-mean (LM)} method, which assigns each training sample its own prediction horizon from a narrow range centered on an MLE-based horizon (see Section~\ref{sec:lm-idea} for the motivation).
 
-\paragraph{Base horizon.} The base horizon is a fraction of the Lyapunov time (reciprocal of the MLE, see Section~\ref{sec:lm-idea}), expressed in model steps:
+\paragraph{Base horizon.}
+The base horizon is a fraction of the Lyapunov time (reciprocal of the MLE, see Section~\ref{sec:lm-idea}), expressed in model steps:
 
 \begin{equation} \label{eq:t-base}
 T_{\mathrm{base}} = \mathrm{clip}\left( \mathrm{round}\left( \frac{\gamma}{\hat\lambda_{\max}\,\Delta t} \right),\, 1,\, T_{\max} \right).
@@ -303,13 +310,15 @@ T_{\mathrm{base}} = \mathrm{clip}\left( \mathrm{round}\left( \frac{\gamma}{\hat\
 
 Here, $\hat\lambda_{\max}$ is the estimate of the MLE, computed as the mean leading LLE along the training split, $\Delta t$ is the model timestep, $T_{\max} = 10$ is the largest horizon used in training, and $\gamma$, called the \emph{Lyapunov fraction}, is the fraction of the Lyapunov time up to which predictions are assumed to remain reliable. We use an empirically found $\gamma = 0.45$. If $\hat\lambda_{\max} \le 0$, we set $T_{\mathrm{base}} = T_{\max}$.
 
-\paragraph{Horizon range.} The sample-wise horizons are restricted to
+\paragraph{Horizon range.}
+The sample-wise horizons are restricted to
 \[
 T_{\mathrm{l}} = \max(1,\, T_{\mathrm{base}} - v), \qquad T_{\mathrm{h}} = \min(T_{\mathrm{base}} + v,\, T_{\max}),
 \]
 with spread $v = 1$, so that they lie between $T_{\mathrm{base}} - 1$ and $T_{\mathrm{base}} + 1$.
 
-\paragraph{FTLE-based assignment.} For every state $\mathbf{x}_m$ of the training split, we compute the forward finite-time Lyapunov exponent (Eq.~\eqref{eq:ftle}) over a window of $W = T_{\mathrm{base}}$ steps:
+\paragraph{FTLE-based assignment.}
+For every state $\mathbf{x}_m$ of the training split, we compute the forward finite-time Lyapunov exponent (Eq.~\eqref{eq:ftle}) over a window of $W = T_{\mathrm{base}}$ steps:
 
 \[
 \Lambda_m = \Lambda_{T_{\mathrm{base}}}(\mathbf{x}_m), \quad m = 0, \dots, N - T_{\mathrm{base}} - 1,
@@ -341,9 +350,11 @@ Interpretation:
 
 Each sample is rolled out auto-regressively for its own horizon $T_m$, and its loss is the MSE averaged over these $T_m$ steps.
 
-\paragraph{Note.} Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
+\paragraph{Note.}
+Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
-\paragraph{Training budget.} LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
+\paragraph{Training budget.}
+LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
 \[
 B = \sum_{T=1}^{T_{\max}} 20 \cdot N_T \cdot T.
 \]
@@ -617,11 +628,16 @@ with default parameter values:
     \item $w_{\min} = 0.05$: Minimum unnormalized weight. Prevents the long-horizon errors from vanishing.
 \end{itemize}
 
-The loss is calculated as follows:
+The weights of each sample are normalized to sum to one over the rollout,
 
 \[
-L_m = \alpha \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+1}, \mathbf{x}_{m+1}) + (1 - \alpha) \sum_{j = 1}^{T_{\mathrm{base}}} w_{m, j} \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+j}, \mathbf{x}_{m+j}),
+\tilde{w}_{m, j} = \frac{w_{m, j}}{\sum_{k = 1}^{T_{\mathrm{base}}} w_{m, k}},
 \]
-where $\alpha = 0.25$ is the strength of the one-step anchor. A larger $\alpha$ prioritizes accurate local dynamics.
+so that the rollout term is a weighted mean of the step errors and has the same scale as the fixed-horizon loss. The loss is calculated as follows:
+
+\[
+L_m = \alpha \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+1}, \mathbf{x}_{m+1}) + (1 - \alpha) \sum_{j = 1}^{T_{\mathrm{base}}} \tilde{w}_{m, j} \, \mathrm{MSE}(\hat{\mathbf{x}}_{m+j}, \mathbf{x}_{m+j}),
+\]
+and the training loss is its mean over the samples of a batch. Here, $\alpha = 0.25$ is the strength of the one-step anchor. A larger $\alpha$ prioritizes accurate local dynamics.
 
 \end{document}
