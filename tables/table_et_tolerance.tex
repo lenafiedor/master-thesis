@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Sensitivity of ET to the tolerance $\theta$ (200 epochs, $T_{\max} = 10$). Relative difference of the median MSE over a 10-step rollout ($T_{\mathrm{val}} = 10$) to the best 200-epoch fixed-horizon model $T^*$ (negative: ET is better); $^{*}$: 95\% seed-bootstrap interval excludes zero. 20 seeds for the boxed tolerances, 5 otherwise. Last row: mean training horizon $\bar t^*$ in the final epoch at the best tolerance.}
+  \label{tab:et-tolerance}
+  \small
+  \begin{tabular}{l cccc}
+    \toprule
+    & Lorenz-96 & Rössler & Rössler & Lorenz-63 \\
+    $\theta$ & $\Delta t = 0.1$ ($T^*=4$) & $\Delta t = 0.1$ ($T^*=10$) & $\Delta t = 0.05$ ($T^*=10$) & $\Delta t = 0.05$ ($T^*=10$) \\
+    \midrule
+    0.02--0.03 & $+54\%^{*}$ & $+63\%^{*}$ & $+3291\%^{*}$ & $+2690\%^{*}$ \\
+    0.05 & -- & $+33\%^{*}$ & $+494\%^{*}$ & -- \\
+    0.1 & $+54\%^{*}$ & $+16\%^{*}$ & $+263\%^{*}$ & $+235\%^{*}$ \\
+    0.3 & $+55\%^{*}$ & $-15\%$ & $+27\%^{*}$ & \fbox{$+6\%$} \\
+    0.5 & $-3\%$ & -- & -- & -- \\
+    0.7 & \fbox{$-14\%^{*}$} & \fbox{$-9\%^{*}$} & \fbox{$-7\%$} & -- \\
+    0.88 & \fbox{$\mathbf{-15\%}^{*}$} & -- & -- & -- \\
+    1.0 & \fbox{$-3\%^{*}$} & -- & -- & $+16\%^{*}$ \\
+    \midrule
+    FSLE knee & 0.88 & none & none & none \\
+    $\bar t^*$ (final epoch) & 9.0 & 9.9 & 10.0 & 9.8 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

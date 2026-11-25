@@ -381,6 +381,38 @@ The idea is that, after $j$ steps, a sample whose initial state has a large FTLE
 
 As a result, samples from stable regions are trained on the whole rollout, while samples from unstable regions are trained mainly on their first few steps. The exact formulation and parameter values are given in Appendix~\ref{app:weighted-loss}.
 
+\subsection{Error-Truncated Horizon}
+\label{sec:et}
+
+LM and WL derive the horizon of a sample from the dynamics of the true system before training. The local FTLE, however, says how fast \emph{infinitesimal} perturbations grow, whereas the model's forecast error at a given step is finite and depends on the model itself. In \textbf{error truncation (ET)}, each sample is therefore rolled out for as long as the model's own forecast stays close to the target, a criterion similar to the uncertainty-based truncation of model rollouts in model-based reinforcement learning \cite{frauenknecht_trust_2024}.
+
+\paragraph{Per-sample truncation.}
+Every sample $m$ is rolled out auto-regressively for up to $T_{\max} = 10$ steps. At step $j$, the forecast error is measured in the normalized coordinates as
+\[
+e_m(j) = \sqrt{\frac{1}{d} \left\| \hat{\mathbf{x}}_{m,j} - \mathbf{x}_{m,j} \right\|^2},
+\]
+where $d$ is the dimension of the system. The training horizon of the sample is the first step at which the error exceeds a tolerance $\theta$,
+\[
+t^*_m = \min\left( \{ j : e_m(j) > \theta \} \cup \{ T_{\max} \} \right),
+\]
+and its loss is the MSE averaged over steps $1, \dots, t^*_m$ (the step that exceeds the tolerance is included). The batch loss is the mean over samples. The truncation decision is computed from detached errors, so no gradient flows through $t^*_m$, and the rollout of a batch stops as soon as every sample in it has been truncated.
+
+Unlike LM, the horizon of a sample is not fixed before training. Early in training, the forecast errors are large and most rollouts are truncated after a few steps; as the model improves, its errors stay below $\theta$ for longer and the training horizons grow. ET therefore contains an implicit curriculum that is driven by the model's own accuracy instead of a schedule. We report the mean training horizon $\bar t^*$ of the final epoch.
+
+\paragraph{Choosing the tolerance from the finite-size Lyapunov exponent.}
+The tolerance is an error size, not a number of steps. To derive it from the dynamics of the system, we use the \emph{finite-size Lyapunov exponent} (FSLE) \cite{aurell_predictability_1997}, which measures the growth rate of a perturbation as a function of its size. For a perturbation of size $\delta$, let $t(\delta)$ be the time at which it first exceeds $\delta$. For thresholds $\delta_{n+1} = r\,\delta_n$,
+\[
+\lambda(\delta_n) = \frac{\ln r}{\left\langle t(\delta_{n+1}) - t(\delta_n) \right\rangle},
+\]
+where the average is taken over an ensemble of initial states on the attractor. For small $\delta$, $\lambda(\delta)$ equals the maximal Lyapunov exponent; as the perturbation approaches the size of the attractor, its growth slows down and $\lambda(\delta)$ falls to zero. In normalized coordinates, two independent states on the attractor have an RMSE of about $\sqrt{2}$, which is the saturation value of the error.
+
+We define the \emph{knee} $\delta^*$ as the smallest size at which $\lambda(\delta)$ drops below $0.75\,\lambda_{\max}$, i.e., where the error growth stops being exponential, and set $\theta = \delta^*$. Rollout steps before the knee carry an informative training signal: the error is still in the regime in which a small change of the model gives a small, predictable change of the forecast. Beyond the knee, the loss mostly measures that the forecast has moved to a different part of the attractor. If $\lambda(\delta)$ does not drop below $0.75\,\lambda_{\max}$ before saturation, the FSLE has no knee, and we fall back to $\theta = 0.7$, about half of the saturation value (see Section~\ref{sec:results-et} for how this default was obtained). In addition, the tolerance has to be well above the one-step error of the model; otherwise, every rollout is truncated after the first step.
+
+The FSLE is computed with the true equations of the system, in the normalization of the training data: 2\,000 states are taken from the validation trajectory, each is perturbed by a random vector of normalized RMSE $10^{-8}$, and both copies are integrated with RK4 ($\Delta t = 0.01$) for 40 time units. The thresholds are spaced by $r = \sqrt{2}$, and a threshold is used only if more than half of the trajectories reach it. The result is a single number per system and timestep, obtained without training any model. For Lorenz-96, the knee is $\delta^* = 0.88$; the FSLE of Lorenz-63 and Rössler has no knee below saturation, so $\theta = 0.7$.
+
+\paragraph{Training budget.}
+ET is trained under the same rollout budget $B$ as LM, reduced by the cost of the FSLE computation. The FSLE cost is converted into rollout steps by comparing floating-point operations: one rollout step costs one forward and one backward pass of the MLP, about three times the FLOPs of the forward pass, while the FSLE costs two RK4 integrations of the ensemble. The FSLE amounts to 0.3\% of $B$ for Lorenz-63 and Rössler and to 1.0\% for Lorenz-96, and every ET model is charged for it, although the result is shared between seeds. A batch is charged its batch size times $T_{\max}$, an upper bound, since truncated rollouts may stop earlier. Training stops before the first batch that would exceed the remaining budget, and at most after 200 epochs. Under this accounting, ET models train for about 110 epochs.
+
 \newpage
 
 \section{Results}
@@ -487,6 +519,41 @@ WL trains at the fixed horizon $T_{\mathrm{base}}$ and down-weights the later ro
 
 It does not improve on the fixed-horizon optimum on any system or timestep, and the difference is significant over the full validation window in every configuration. It is also worse than LM everywhere, although both train around the same base horizon. Down-weighting the late rollout steps of locally unstable samples removes part of the training signal that makes multi-step training useful, without a gain in short-term accuracy.
 
+\subsection{Error-Truncated Horizon}
+\label{sec:results-et}
+
+ET truncates the rollout of each sample once the model's forecast error exceeds a tolerance $\theta$, which is set from the knee of the FSLE (Section~\ref{sec:et}).
+
+\input{tables/table_et}
+
+\paragraph{Equal budget.}
+Table~\ref{tab:results-et} compares ET with the best model of the 20-epoch fixed-horizon sweep and with LM under the same rollout budget, with the tolerance taken from the FSLE and no search over $\theta$.
+\begin{itemize}
+    \item \textbf{Rössler.} Unlike LM, ET improves on the fixed-horizon optimum under an equal budget with the $3 \times 10$ architecture: over the full validation window by 15\% at $\Delta t = 0.05$ (19/20 seeds) and by 8\% at $\Delta t = 0.1$ (15/20), with a tie at $\Delta t = 0.08$. It also improves the one-step error at $\Delta t = 0.05$ and $0.1$, and it beats LM on 17--20 of 20 seeds at every timestep.
+    \item \textbf{Lorenz-96.} Over the full validation window, ET beats the fixed-horizon optimum by 26\%, 15\% and 10\% at the three timesteps, on 17--19 of 20 seeds, and performs on par with LM. As with LM, the gain comes at the expense of the one-step error, which is higher than that of the one-step-optimal fixed model at $\Delta t = 0.08$ and $0.1$.
+    \item \textbf{Lorenz-63.} ET improves on the fixed-horizon optimum only at $\Delta t = 0.05$ (by 15\%, 16/20 seeds). At $\Delta t = 0.08$ and $0.1$, it is 5\% and 22\% worse over the full validation window, its one-step error is 75\% and 140\% higher than that of the fixed-horizon optimum, and it loses to LM on most seeds (1/20 and 5/20 wins over the full validation window).
+\end{itemize}
+The failure on Lorenz-63 has a clear cause. Its FSLE has no knee, so the tolerance falls back to $\theta = 0.7$, and at the end of training almost no rollout is truncated ($\bar t^* = 9.9$). ET then effectively trains at $T = 10$, whereas the optimal fixed horizon at these timesteps is 5 and 4. The fallback tolerance is too permissive for a system in which the useful horizon is much shorter than $T_{\max}$.
+
+\input{tables/table_et_tolerance}
+
+\paragraph{Sensitivity to the tolerance.}
+To see how much depends on $\theta$, we trained ET for 200 epochs with a range of tolerances and compared it with the best 200-epoch fixed-horizon model (Table~\ref{tab:et-tolerance}). Tolerances in the order of the one-step error ($\theta \le 0.1$) truncate nearly every rollout after the first steps; the model converges to the solution of a short fixed horizon and is much worse than $T^*$. On Lorenz-96, the error drops sharply between $\theta = 0.3$ and $0.7$, is lowest at $\theta = 0.7$--$0.88$ (14--15\% below $T^*$, 20 seeds), and rises again for $\theta = 1.0$, where ET approaches training at $T_{\max}$. The best tolerance coincides with the knee of the FSLE. On Rössler, $\theta = 0.7$ improves on $T^*$ at both timesteps (by 9\% and 7\%, significant at $\Delta t = 0.1$), and on Lorenz-63, $\theta = 0.3$ ties with $T^*$. These results motivated the fallback $\theta = 0.7$ for systems without a knee.
+
+\input{tables/table_et_forcing}
+
+\paragraph{Does the knee predict the tolerance?}
+Among the benchmark systems, only Lorenz-96 has a knee, and the rule was formulated after the tolerance sweep on this system. To test it on systems that were not used to formulate it, we varied the forcing of Lorenz-96 (Table~\ref{tab:et-forcing}). The forcing changes the Lyapunov time by a factor of five, from 16 to 3 model steps, while the knee stays between 0.66 and 0.78 in normalized coordinates. The predictions were fixed before the models were trained. They compared two candidate rules: if the tolerance is set by the error size at which growth saturates, the best $\theta$ should stay near the knee for every forcing; if it is set by a time scale, the best $\theta$ should shrink as the Lyapunov time decreases.
+
+The best tolerance stays at $\theta = 0.7$ or $0.88$ for every forcing, and the tolerance chosen by the rule ($\theta = 0.88$) is the best of the tested values in three of the four cases. At $F = 6$, it gives 10\% instead of the 21\% gain of $\theta = 0.7$. The mean training horizon at the best tolerance does not follow the Lyapunov time either: for $F = 10$ and $16$, ET trains on rollouts of 7.9 and 5.1 steps, longer than the Lyapunov time of 5.7 and 3.2 steps. The tolerance is thus a property of how errors saturate, not of how fast they grow. At $F = 16$, the system is so chaotic that all models forecast poorly (MSE $\approx 0.9$), and the differences between methods are small.
+
+\paragraph{Training beyond $T_{\max} = 10$.}
+For Lorenz-63 at $\Delta t = 0.05$ and for Rössler at $\Delta t = 0.1$, the optimal fixed horizon lies at the boundary of the search range. We therefore trained fixed-horizon models up to $T = 30$ and ET with $T_{\max} = 30$ (200 epochs, 20 seeds). Fixed-horizon training at $T = 30$ collapses on Lorenz-63 (median 10-step MSE $0.51$ compared with $0.008$ at $T = 10$), whereas ET with the same maximal horizon trains stably, with final training horizons of 25--30 steps. On Rössler, ET with $\theta = 0.7$ beats the best fixed horizon up to $T = 30$ by 15\%, 16\% and 13\% over rollouts of 10, 20 and 30 steps. On Lorenz-63, $\theta = 0.3$ ties with the best fixed horizon over 10 and 20 steps and is 31\% better over 30 steps; larger tolerances help only for the longest rollouts. Per-sample truncation thus makes long training horizons usable where fixed-horizon training fails.
+
+\paragraph{Limitations.}
+First, in normalized coordinates the knee hardly varies between the systems we tested (0.66--0.88), so the experiments cannot distinguish the FSLE rule from a constant tolerance in this range. Second, for Lorenz-63 and Rössler, the tolerance comes from the fallback, which was chosen empirically and fails on Lorenz-63 at the larger timesteps. Third, on these two systems the errors of the trained models stay far below the tolerance within ten steps (an RMSE of 0.02--0.07 at the tenth step), so truncation acts mostly early in training. The gain may therefore come from the implicit curriculum rather than from truncating individual rollouts, and a schedule that reproduces the growth of $\bar t^*$ without per-sample truncation would be needed to separate the two.
+% TODO: add the 5x5 Rössler results (scripts/run_budget_et.sh --small, then scripts.et_thesis_table).
+
 \subsection{Long-Horizon Forecasts}
 \label{sec:long-horizon}
 
@@ -558,6 +625,7 @@ Figures~\ref{fig:mse-heatmap-budget} and~\ref{fig:mse-heatmap-200} condense the 
     \item \textbf{LM:} under an equal budget, it matches or beats the best fixed-horizon model on both Lorenz systems, with the gain growing along the rollout. At equal training length, it stays close to an oracle choice of the fixed horizon.
     \item \textbf{LMR:} the FTLE-based assignment helps only on Lorenz-63; the main benefit of LM comes from the choice of the mean horizon.
     \item \textbf{WL:} worse than both the fixed-horizon optimum and LM everywhere.
+    \item \textbf{ET:} with the tolerance set from the FSLE and no search over it, it beats the fixed-horizon optimum under an equal budget on Lorenz-96 and, unlike LM, on the $3 \times 10$ Rössler model. It fails on Lorenz-63 at the larger timesteps, where the FSLE has no knee and the fallback tolerance is too permissive.
 \end{itemize}
 
 \paragraph{Advantage of adaptive methods.}

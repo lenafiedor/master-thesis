@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Lorenz-96 ($d = 10$, $\Delta t = 0.1$) with different forcings $F$. FSLE quantities in normalized coordinates: maximal Lyapunov exponent $\lambda_{\max}$, Lyapunov time in model steps, and the knee $\delta^*$ where $\lambda(\delta)$ drops to $0.75\,\lambda_{\max}$ (interpolated between grid points; the rule uses the grid value $0.88$ for every $F$). ET columns: relative difference of the median 10-step MSE to the best 200-epoch fixed-horizon model $T^*$; $^{*}$: 95\% seed-bootstrap interval excludes zero; bold: best tolerance. 5 seeds per model (20 for $F = 8$, except $\theta = 0.5$). $\bar t^*$: mean training horizon in the final epoch at the best tolerance.}
+  \label{tab:et-forcing}
+  \small
+  \begin{tabular}{c ccc c cccc c}
+    \toprule
+    & \multicolumn{3}{c}{FSLE} & & \multicolumn{4}{c}{ET, tolerance $\theta$} & \\
+    \cmidrule(lr){2-4}\cmidrule(lr){6-9}
+    $F$ & $\lambda_{\max}$ & $1/(\lambda_{\max}\Delta t)$ & $\delta^*$ & $T^*$ & 0.5 & 0.7 & 0.88 & 1.0 & $\bar t^*$ \\
+    \midrule
+    6  & 0.61 & 16.4 & 0.66 & 6 & $-3\%$ & $\mathbf{-21\%}^{*}$ & $-10\%$ & $+24\%$ & 9.4 \\
+    8  & 1.21 & 8.3  & 0.66 & 4 & $-3\%$ & $-14\%^{*}$ & $\mathbf{-15\%}^{*}$ & $-3\%^{*}$ & 9.0 \\
+    10 & 1.74 & 5.7  & 0.74 & 4 & $-5\%$ & $-13\%^{*}$ & $\mathbf{-15\%}^{*}$ & $-8\%$ & 7.9 \\
+    16 & 3.15 & 3.2  & 0.78 & 4 & $+10\%^{*}$ & $+2\%^{*}$ & $\mathbf{-3\%}$ & $-0.5\%^{*}$ & 5.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
