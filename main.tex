@@ -139,7 +139,7 @@ The Lorenz-96 system is defined as follows. For $i = 1, \dots, d$:
 with periodic boundary conditions $x_{-1} = x_{d-1}$, $x_0 = x_d$, $x_{d+1} = x_1$ and $d \geq 4$. We set the parameters of the system to $d = 10$ and $F = 8$ (the forcing constant).
 
 \paragraph{Numerical integration.}
-The system trajectories were obtained by numerically integrating the governing differential equations using the classical fourth-order Runge-Kutta method with a fixed integration step $\delta t = 0.01$. The trajectory is then sampled every $\Delta t / \delta t$ integration steps, so that consecutive samples are one model timestep $\Delta t$ apart.
+The system trajectories were obtained by numerically integrating the governing differential equations using the classical fourth-order Runge-Kutta method (RK4) with a fixed integration step $\delta t = 0.01$. The trajectory is then sampled every $\Delta t / \delta t$ integration steps, so that consecutive samples are one model timestep $\Delta t$ apart.
 
 \subsection{Global and Local Lyapunov Exponents}
 
@@ -264,7 +264,7 @@ Initially, we trained a set of neural networks to approximate the dynamical syst
 
 For each system and timestep, we simulate a single long trajectory of 120\,000 steps (fixed simulation seed). The first 80\% of the trajectory form the training split and the remaining 20\% the validation split; a gap of 10 steps (the largest training and validation horizon) separates the two, so that no rollout target of a training sample lies in the validation split. Every state of a split serves as the initial condition of one sample whose targets are the following $T$ states. We tested with timesteps $\Delta t = 0.05, 0.08, 0.1$ and roll out the simulation up to $T_{\max} = 10$ steps, corresponding to physical times $\tau = 0.50, 0.80, 1.00$, respectively. For a fixed horizon $T$, the training loss is the MSE averaged over the $T$ steps of the auto-regressive rollout.
 
-For each training horizon $T \in \{1, \dots, 10\}$, we trained 20 MLPs with fixed seeds, (1) for 20 epochs and (2) for 200 epochs, and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). We were able to retrieve the Lorenz-63 trajectories with reasonable loss values up to a temporal horizon of $\tau = 1.00$. The MSE obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
+For each training horizon $T \in \{1, \dots, 10\}$, we trained 20 MLPs with fixed seeds, (1) for 20 epochs and (2) for 200 epochs, and validated them at the same horizon values $T_{\mathrm{val}}$ (see Figure~\ref{fig:validation-curves}). The MSE obtained for each $T_{\mathrm{val}}$ is used as an evaluation metric.
 
 Based on cross-validation performance, we report two horizon values for which the median MSE was minimal: (1) validated only at $T_{\mathrm{val}} = 1$ and (2) across all $T_{\mathrm{val}}$. This is our baseline for comparison with the adaptive horizon models.
 
@@ -285,7 +285,7 @@ In this case, as explained in Section~\ref{sec:fixed-horizon}, the validation er
 \subsection{Cross-Validation Minimum Search}
 \label{sec:cv}
 
-Increasing the training horizon can improve rollout prediction, but can also make optimization harder. Stopping immediately when validation performance deteriorates may favor short horizons, since the model needs time to adapt. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other \cite{aceituno_temporal_2025}.
+Forced increase of the training horizon can improve rollout prediction, but can also make the optimization harder. Even within the prediction range dictated by Lyapunov time, longer horizons require more compute because they are harder to learn. One needs to find a trade-off between improving general learnability on the one hand and preventing an explosion of gradients on the other \cite{aceituno_temporal_2025}.
 
 For the aforementioned reasons, we draw the conclusion that the $T$ increase must be forced to some extent, but stopped when the validation loss explodes due to too long rollouts. To determine where the linear scheduler should stop, we track the validation error during training and select the horizon at which it is minimal (see Figure~\ref{fig:validation-curves}). In this approach, the goal is to select the model with a minimal multi-step validation error over the first $T_{\max} = 10$ rollout steps. We call it \textbf{the cross-validation (CV)} method, which consists of a curriculum phase followed by a training phase at the selected horizon. Note that this method is more of a sanity check and still does not incorporate any information about the uncertainty of the system into the training.
 
