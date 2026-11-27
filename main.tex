@@ -355,7 +355,7 @@ Each sample is rolled out auto-regressively for its own horizon $T_m$, and its l
 Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
 \paragraph{Training budget.}
-LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
+LM models are trained in two regimes: 1) under a training budget matched to a full grid search over fixed horizons and 2) for 200 epochs. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
 \[
 B = \sum_{T=1}^{T_{\max}} 20 \cdot N_T \cdot T.
 \]
