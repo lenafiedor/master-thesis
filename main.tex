@@ -372,7 +372,7 @@ Each sample is rolled out auto-regressively for its own horizon $T_m$, and its l
 Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
 \paragraph{Training budget.}
-LM models are trained in both regimes (Section~\ref{sec:regimes}). Under the equal budget $B$, a training batch is charged its batch size times the longest horizon in the batch, since the batch is rolled out to that length.
+LM models are trained in for 200 epochs and both regimes (Section~\ref{sec:regimes}). Under the equal budget $B$, a training batch is charged its batch size times the longest horizon in the batch, since the batch is rolled out to that length.
 
 \subsubsection{Randomized Lyapunov-Mean Control}
 \label{sec:lmr}
