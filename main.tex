@@ -524,11 +524,18 @@ Overall, the online selection of CV does not replace the grid search.
 
 LM assigns each training sample a horizon around a base horizon derived from the Lyapunov time, shorter for locally more chaotic states (Section~\ref{sec:lm}). Its base horizon is compared with the fixed-horizon optimum in Section~\ref{sec:results-horizons}.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figs/validation_curves_budget.pdf}
+  \caption{Validation curves of the 20-epoch fixed-horizon models (solid) with the median validation MSE of LM trained under an equal budget (dashed) at the same validation horizon $T_{\mathrm{val}}$ (color). A dashed line below the minimum of the solid curve of the same color means that LM beats every fixed horizon of the sweep at that $T_{\mathrm{val}}$.}
+  \label{fig:validation-curves-budget}
+\end{figure}
+
 \paragraph{Equal budget.}
-Trained with the same rollout budget as the 20-epoch fixed-horizon sweep, LM gives its clearest gains. On Lorenz-96, it beats the best fixed-horizon model of the sweep at every timestep and in both scopes; over the full validation window, it does so on almost every seed. On Lorenz-63, it is better over the full validation window but not at the first step. On Rössler, it does not improve on the fixed-horizon optimum.
+Trained with the same rollout budget as the 20-epoch fixed-horizon sweep, LM gives its clearest gains (Figure~\ref{fig:validation-curves-budget}). On Lorenz-96, it beats the best fixed-horizon model of the sweep at every timestep and in both scopes; over the full validation window, it does so on almost every seed. On Lorenz-63, it is better over the full validation window but not at the first step. On Rössler, it does not improve on the fixed-horizon optimum.
 
 \paragraph{Equal training length.}
-At 200 epochs, LM stays close to an oracle choice of the fixed horizon on all systems over the full validation window, but is slightly and, on Lorenz-96, significantly worse. It loses more at $T_{\mathrm{val}} = 1$: $T_{\mathrm{base}}$ targets multi-step predictability and is longer than the one-step optimum, so training for long-horizon stability costs some one-step accuracy.
+At 200 epochs, LM stays close to an oracle choice of the fixed horizon on all systems over the full validation window (Appendix~\ref{app:epoch-curves}, Figure~\ref{fig:validation-curves-lm}), but is slightly and, on Lorenz-96, significantly worse. It loses more at $T_{\mathrm{val}} = 1$: $T_{\mathrm{base}}$ targets multi-step predictability and is longer than the one-step optimum, so training for long-horizon stability costs some one-step accuracy.
 
 \subsubsection{Randomized Lyapunov-Mean Control}
 \label{sec:results-lmr}
@@ -549,11 +556,18 @@ It does not improve on the fixed-horizon optimum on any system or timestep, and 
 
 ET truncates the rollout of each sample once the model's forecast error exceeds a tolerance $\theta$, which is set from the knee of the FSLE without any search (Section~\ref{sec:et}): the knee for Lorenz-96 and the fallback for Lorenz-63 and Rössler, which have no knee.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figs/validation_curves_et_budget.pdf}
+  \caption{Validation curves of the 20-epoch fixed-horizon models (solid) with the median validation MSE of ET trained under an equal budget (dashed) at the same validation horizon $T_{\mathrm{val}}$ (color). A dashed line below the minimum of the solid curve of the same color means that ET beats every fixed horizon of the sweep at that $T_{\mathrm{val}}$.}
+  \label{fig:validation-curves-et-budget}
+\end{figure}
+
 \paragraph{Equal budget.}
-Over the full validation window, ET has the lowest error of all budget-matched models on Rössler, for both architectures, and beats the best model of the fixed-horizon sweep on Lorenz-96, where it performs on par with LM. On Rössler with the $3 \times 10$ architecture, it is the only method that improves on the sweep under an equal budget. On Lorenz-63, ET helps only at the smallest timestep.
+Over the full validation window, ET has the lowest error of all budget-matched models on Rössler (Figure~\ref{fig:validation-curves-et-budget}), for both architectures, and beats the best model of the fixed-horizon sweep on Lorenz-96, where it performs on par with LM. On Rössler with the $3 \times 10$ architecture, it is the only method that improves on the sweep under an equal budget. On Lorenz-63, ET helps only at the smallest timestep.
 
 \paragraph{Equal training length.}
-At 200 epochs, ET is the best method on Rössler at every timestep and in both scopes, and it is the only method that significantly improves on the fixed-horizon optimum there. On the $5 \times 5$ model, it also has the lowest error, but the large spread over seeds leaves the differences insignificant. On Lorenz-96, ET has the lowest error over the full validation window at every timestep, but beats the fixed-horizon optimum significantly only at the smallest timestep.
+At 200 epochs, ET is the best method on Rössler at every timestep and in both scopes (Appendix~\ref{app:epoch-curves}, Figure~\ref{fig:validation-curves-et}), and it is the only method that significantly improves on the fixed-horizon optimum there. On the $5 \times 5$ model, it also has the lowest error, but the large spread over seeds leaves the differences insignificant. On Lorenz-96, ET has the lowest error over the full validation window at every timestep, but beats the fixed-horizon optimum significantly only at the smallest timestep.
 
 \paragraph{One-step error.}
 On the two Lorenz systems, the gain over the full validation window comes at the expense of the one-step error, which is higher than that of the fixed-horizon optimum, as for LM. On Rössler, ET improves both scopes.
@@ -690,6 +704,25 @@ Tables~\ref{tab:nrmse} and~\ref{tab:smape} repeat the pooled comparison of Secti
 The NRMSE ranking agrees with the MSE ranking in almost all configurations. The budget-matched LM is better than the best 20-epoch fixed-horizon model on Lorenz-63 and Lorenz-96 and equal within rounding on Rössler; at 200 epochs, LM is within 5\% of the fixed-horizon optimum. The collapse of LS and CV on Rössler at $\Delta t = 0.05$ and on Lorenz-96 is equally visible.
 
 SMAPE agrees with this picture on Lorenz-63 and Lorenz-96, but favors the budget-matched LM on Rössler at all three timesteps, where it is slightly worse than the fixed-horizon model in MSE at $\Delta t = 0.08$ and $0.1$. SMAPE is large for Rössler and Lorenz-96 because their coordinates frequently pass through zero, where the relative error is dominated by the small denominator; it is therefore not suited to compare systems with each other.
+
+\section{Validation Curves at Equal Training Length}
+\label{app:epoch-curves}
+
+Figures~\ref{fig:validation-curves-lm} and~\ref{fig:validation-curves-et} repeat Figures~\ref{fig:validation-curves-budget} and~\ref{fig:validation-curves-et-budget} for the models trained for 200 epochs (Section~\ref{sec:regimes}). They are compared with the 200-epoch fixed-horizon models.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figs/validation_curves_lm.pdf}
+  \caption{Validation curves of the 200-epoch fixed-horizon models (solid, as in Figure~\ref{fig:validation-curves}) with the median validation MSE of LM trained for 200 epochs (dashed) at the same validation horizon $T_{\mathrm{val}}$ (color). A dashed line below the minimum of the solid curve of the same color means that LM beats every fixed horizon at that $T_{\mathrm{val}}$.}
+  \label{fig:validation-curves-lm}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{figs/validation_curves_et.pdf}
+  \caption{Validation curves of the 200-epoch fixed-horizon models (solid, as in Figure~\ref{fig:validation-curves}) with the median validation MSE of ET trained for 200 epochs (dashed) at the same validation horizon $T_{\mathrm{val}}$ (color). A dashed line below the minimum of the solid curve of the same color means that ET beats every fixed horizon at that $T_{\mathrm{val}}$.}
+  \label{fig:validation-curves-et}
+\end{figure}
 
 \section{Methods Description}
 \label{app:method-description}
