@@ -275,6 +275,23 @@ Based on cross-validation performance, we report two horizon values for which th
     \label{fig:validation-curves}
 \end{figure}
 
+\subsection{Training Regimes}
+\label{sec:regimes}
+
+Each adaptive method is compared with the fixed-horizon baseline in one or both of two training regimes.
+
+\paragraph{Equal training length.}
+Models are trained for 200 epochs, the same number as the 200-epoch fixed-horizon models. This regime compares a method with an oracle choice of the fixed horizon, i.e., with the best of ten fully trained fixed-horizon models. It is used for all methods.
+
+\paragraph{Equal budget.}
+Models are trained with the computational budget of the full 20-epoch fixed-horizon sweep, i.e., of the grid search that one would otherwise run to choose the horizon. This regime asks whether a single adaptive model can replace the search. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}: one rollout step is one application of the model to one sample, together with its share of the backward pass. Because all methods share the same architecture, rollout steps are proportional to training FLOPs. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget is the total of the 20-epoch sweep,
+\[
+B = \sum_{T=1}^{T_{\max}} 20 \cdot N_T \cdot T.
+\]
+During training, every batch is charged its batch size times the number of steps it is rolled out, and training stops before the first batch that would exceed the remaining budget, regardless of the number of epochs completed. Any precomputation a method needs from the true dynamics is converted into rollout steps by comparing FLOPs and subtracted from $B$. The equal-budget regime is used for LM and ET, whose cost per epoch varies; the method-specific details of the accounting are given in their subsections. For LS, the two regimes coincide: its schedule of ten 20-epoch stages at $T = 1, \dots, 10$ uses exactly the rollout steps of the 20-epoch sweep.
+
+Equal-budget models are compared with the best 20-epoch fixed-horizon model, and equal-length models with the best 200-epoch fixed-horizon model (Section~\ref{sec:reporting}).
+
 \subsection{Linear Horizon Scheduler}
 \label{sec:ls}
 
@@ -355,11 +372,7 @@ Each sample is rolled out auto-regressively for its own horizon $T_m$, and its l
 Because the standardization uses statistics of the training split, the horizons reflect relative instability within that split, not the absolute magnitude of the FTLE.
 
 \paragraph{Training budget.}
-LM models are trained in two regimes: for 200 epochs and under a training budget matched to a full grid search over fixed horizons. Since the cost of an epoch depends on the rollout lengths, the budget is measured in \emph{rollout steps}, i.e., single forward applications of the model to one sample, which are proportional to training FLOPs because all methods share the same architecture. One fixed-horizon model trained at horizon $T$ for $E$ epochs uses $E \cdot N_T \cdot T$ rollout steps, where $N_T = N - T$ is the number of training samples with a complete $T$-step target. The budget of an LM model is the total of the 20-epoch sweep,
-\[
-B = \sum_{T=1}^{T_{\max}} 20 \cdot N_T \cdot T.
-\]
-A training batch of LM is charged its batch size times the longest horizon in the batch, since the batch is rolled out to that length. Training stops before the first batch that would exceed $B$, regardless of the number of epochs.
+LM models are trained in both regimes (Section~\ref{sec:regimes}). Under the equal budget $B$, a training batch is charged its batch size times the longest horizon in the batch, since the batch is rolled out to that length.
 
 \subsubsection{Randomized Lyapunov-Mean Control}
 \label{sec:lmr}
@@ -412,7 +425,7 @@ We define the \emph{knee} $\delta^*$ as the smallest size at which $\lambda(\del
 The FSLE is computed with the true equations of the system, in the normalization of the training data: 2\,000 states are taken from the validation trajectory, each is perturbed by a random vector of normalized RMSE $10^{-8}$, and both copies are integrated with RK4 ($\Delta t = 0.01$) for 40 time units. The thresholds are spaced by $r = \sqrt{2}$, and a threshold is used only if more than half of the trajectories reach it. The result is a single number per system and timestep, obtained without training any model. For Lorenz-96, the knee is $\delta^* = 0.88$; the FSLE of Lorenz-63 and Rössler has no knee below saturation, so $\theta = 0.7$.
 
 \paragraph{Training budget.}
-ET is trained under the same rollout budget $B$ as LM, reduced by the cost of the FSLE computation. The FSLE cost is converted into rollout steps by comparing floating-point operations: one rollout step costs one forward and one backward pass of the MLP, about three times the FLOPs of the forward pass, while the FSLE costs two RK4 integrations of the ensemble. The FSLE amounts to 0.3\% of $B$ for Lorenz-63 and Rössler and to 1.0\% for Lorenz-96, and every ET model is charged for it, although the result is shared between seeds. A batch is charged its batch size times $T_{\max}$, an upper bound, since truncated rollouts may stop earlier. Training stops before the first batch that would exceed the remaining budget, and at most after 200 epochs. Under this accounting, ET models train for about 110 epochs.
+ET is trained in both regimes (Section~\ref{sec:regimes}). Under the equal budget, $B$ is reduced by the cost of the FSLE computation. The FSLE cost is converted into rollout steps by comparing floating-point operations: one rollout step costs one forward and one backward pass of the MLP, about three times the FLOPs of the forward pass, while the FSLE costs two RK4 integrations of the ensemble. The FSLE amounts to 0.3\% of $B$ for Lorenz-63 and Rössler and to 1.0\% for Lorenz-96. A batch is charged its batch size times $T_{\max}$, an upper bound, since truncated rollouts may stop earlier. Training stops before the first batch that would exceed the remaining budget, and at most after 200 epochs. Under this accounting, ET models train for about 110 epochs.
 
 \newpage
 
@@ -423,7 +436,7 @@ ET is trained under the same rollout budget $B$ as LM, reduced by the cost of th
 
 All models are evaluated on the validation split at $T_{\mathrm{val}} \in \{1, \dots, 10\}$. For each seed and $T_{\mathrm{val}}$, the error is the MSE (in normalized coordinates) averaged over the first $T_{\mathrm{val}}$ steps of an auto-regressive rollout. We report the median over 20 seeds in two scopes: the one-step error ($T_{\mathrm{val}} = 1$) and the error pooled over all validation horizons.
 
-Each method is compared with the best fixed-horizon model of the same training regime: budget-based LM with fixed-horizon models trained for 20 epochs, and all other methods with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
+Each method is compared with the best fixed-horizon model of the same training regime (Section~\ref{sec:regimes}): budget-based LM and ET with fixed-horizon models trained for 20 epochs, and all 200-epoch models with fixed-horizon models trained for 200 epochs. The reference horizon $T^*$ is the one with the lowest validation MSE, chosen separately for each scope and regime.
 
 Tables~\ref{tab:results-rossler}-\ref{tab:results-lorenz96} give the median MSE with its standard deviation over seeds, and the number of seeds on which a method beats the reference. Significance is assessed with a two-sided exact sign test, Holm-corrected within each block of a table. The results in other error measures (NRMSE, SMAPE) are given in Appendix~\ref{app:metrics}; forecasts beyond the training window are evaluated with the valid prediction time (VPT) in Section~\ref{sec:long-horizon}.
 
