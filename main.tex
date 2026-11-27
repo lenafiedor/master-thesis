@@ -479,6 +479,28 @@ For Rössler, the error keeps decreasing up to the longest tested horizon after 
 
 There are two ways to make the problem harder: extending the range of horizons or reducing the capacity of the model. For Rössler, the Lyapunov-based base horizon would lie between 23 and 47 steps (Table~\ref{tab:horizons}), so extending the range far enough would break the comparability of the validation horizons across systems and multiply the cost of the fixed-horizon grid search. Since we wanted to keep the set of training and validation horizons consistent across all systems, we decided instead to increase the task difficulty by using a simplified neural network architecture with two hidden layers of 5 neurons ($5 \times 5$) instead of three hidden layers of 10 neurons ($3 \times 10$) that we use in both Lorenz systems. Everything else (data, optimizer, epochs, seeds, rollout budget and Lyapunov fraction $\gamma$) is unchanged. With less capacity, the one-step map is approximated less accurately, model errors accumulate faster along the rollout, and the choice of the training horizon matters again. We report the $5 \times 5$ results as a supplementary experiment next to the original Rössler results (Table~\ref{tab:results-rossler_small}, Section~\ref{sec:results-rossler-small}); the other tables and figures refer to the $3 \times 10$ architecture.
 
+\subsection{Selected Horizons}
+\label{sec:results-horizons}
+
+Table~\ref{tab:horizons} compares the horizons on which the adaptive methods train with the optimum of the fixed-horizon search. Two methods do not choose a horizon of their own: LS ends at $T_{\max} = 10$ by construction and WL rolls out every sample to $T_{\mathrm{base}}$.
+
+\input{tables/table_horizons}
+
+\paragraph{Lyapunov-based horizon.}
+The estimated MLE is stable across timesteps and agrees with literature values \cite{geurts_lyapunov_2020, karimi_extensive_2010, ayers_supervised_2023}. For the two Lorenz systems, the resulting base horizon lies in the same range of Lyapunov times as the 200-epoch fixed-horizon optima, and it coincides with $T^*_{\mathrm{all}}$ in half of the configurations. It is never shorter than the 20-epoch optimum: the Lyapunov-based rule anticipates the optimum of well-trained models rather than that of short training. In Lyapunov times, $T_{\mathrm{base}}$ is almost constant (0.43-0.47) by construction, and the 200-epoch optima of both Lorenz systems lie close to it (0.36-0.54). For Rössler, the slow divergence gives base horizons far above $T_{\max}$, so they are clipped to $T_{\max} = 10$ and no longer follow the intended scaling.
+
+\paragraph{Cross-validation minimum search.}
+Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$, and usually longer: on Lorenz-63, the selected horizon grows from 0.45 to 0.68 Lyapunov times with the timestep, whereas the optimum stays between 0.36 and 0.54. This bias follows from the design of the method: the curriculum ends only after 52 to 82 epochs (median over seeds), so a candidate for a longer horizon has been trained for more epochs, and its validation score reflects the extra training time and not only the horizon. On Lorenz-96, the curriculum ends after the minimum stage length at every horizon (52 epochs), and the selected horizon carries no information (Section~\ref{sec:results-cv}).
+
+\paragraph{Error truncation.}
+ET does not select a shorter horizon. At the end of training, its mean training horizon $\bar t^*$ is practically $T_{\max}$ on Rössler and Lorenz-63, and it falls clearly below $T_{\max}$ only on Lorenz-96 at the two larger timesteps ($\bar t^* = 9.5$ and $9.1$). Measured in Lyapunov times, ET therefore trains on longer rollouts than LM and CV, up to 2.3 times the fixed-horizon optimum. Its tolerance acts mainly early in training, when the forecast errors are still large (Section~\ref{sec:et}). On Lorenz-63 at the larger timesteps, where the optimum is much shorter than $T_{\max}$, this is the cause of its failure (Section~\ref{sec:results-et}).
+
+\paragraph{Upper bound from the lap duration.}
+For Lorenz-63, the mean lap duration gives an upper bound of about 14, 9 and 7 steps at $\Delta t = 0.05, 0.08, 0.1$ (Section~\ref{sec:lm-idea}). The fixed-horizon optima and $T_{\mathrm{base}}$ lie below this bound at every timestep. The horizon selected by CV slightly exceeds it at $\Delta t = 0.1$, and the horizon of ET exceeds it at both larger timesteps, which are exactly the configurations in which ET fails.
+
+\paragraph{Rössler.}
+All methods train on $T_{\max} = 10$ or very close to it, which coincides with the 200-epoch optimum at the boundary of the search range (Section~\ref{sec:results-fixed}). The horizon choice therefore cannot distinguish the methods on this system.
+
 \subsection{Linear Horizon Scheduler}
 \label{sec:results-ls}
 
@@ -491,14 +513,8 @@ This is what the design of LS suggests (Section~\ref{sec:ls}): the last stages o
 \subsection{Cross-Validation Minimum Search}
 \label{sec:results-cv}
 
-CV increases the horizon during a curriculum phase, selects the horizon with the lowest validation error, and continues training there (Section~\ref{sec:cv}).
+CV increases the horizon during a curriculum phase, selects the horizon with the lowest validation error, and continues training there (Section~\ref{sec:cv}). The selected horizons are discussed in Section~\ref{sec:results-horizons}; CV usually selects a longer horizon than $T^*_{\mathrm{all}}$.
 
-\input{tables/table_cv}
-
-\paragraph{Selected horizons.}
-Wherever CV trains successfully, it selects a horizon at least as long as $T^*_{\mathrm{all}}$, and usually longer (Table~\ref{tab:cv-horizons}). This bias follows from the design of the method: a candidate for a longer horizon has been trained for more epochs, so its validation score reflects the extra training time and not only the horizon.
-
-\paragraph{Error.}
 On Lorenz-63, CV is clearly worse than the fixed-horizon optimum, especially at $T_{\mathrm{val}} = 1$. On Rössler at $\Delta t = 0.05$ and on Lorenz-96, it collapses in the same way as LS: the validation error never leaves its initial level during the curriculum, so every stage ends as early as allowed and the selected horizon carries no information. On Rössler at the larger timesteps, CV is close to the optimum and selects the same horizon as the grid search.
 
 Overall, the online selection of CV does not replace the grid search.
@@ -506,12 +522,7 @@ Overall, the online selection of CV does not replace the grid search.
 \subsection{Lyapunov-Mean Horizon}
 \label{sec:results-lm}
 
-LM assigns each training sample a horizon around a base horizon derived from the Lyapunov time, shorter for locally more chaotic states (Section~\ref{sec:lm}).
-
-\input{tables/table_horizons}
-
-\paragraph{Base horizon.}
-The estimated MLE is stable across timesteps and agrees with literature values \cite{geurts_lyapunov_2020, karimi_extensive_2010, ayers_supervised_2023} (Table~\ref{tab:horizons}). For the two Lorenz systems, the resulting base horizon lies in the same range of Lyapunov times as the 200-epoch fixed-horizon optima, and it coincides with $T^*$ in half of the configurations. It is never shorter than the 20-epoch optimum: the Lyapunov-based rule anticipates the optimum of well-trained models rather than that of short training. For Rössler, the slow divergence gives base horizons far above $T_{\max}$, so they are clipped to $T_{\max} = 10$ and no longer follow the intended scaling.
+LM assigns each training sample a horizon around a base horizon derived from the Lyapunov time, shorter for locally more chaotic states (Section~\ref{sec:lm}). Its base horizon is compared with the fixed-horizon optimum in Section~\ref{sec:results-horizons}.
 
 \paragraph{Equal budget.}
 Trained with the same rollout budget as the 20-epoch fixed-horizon sweep, LM gives its clearest gains. On Lorenz-96, it beats the best fixed-horizon model of the sweep at every timestep and in both scopes; over the full validation window, it does so on almost every seed. On Lorenz-63, it is better over the full validation window but not at the first step. On Rössler, it does not improve on the fixed-horizon optimum.
@@ -548,7 +559,7 @@ At 200 epochs, ET is the best method on Rössler at every timestep and in both s
 On the two Lorenz systems, the gain over the full validation window comes at the expense of the one-step error, which is higher than that of the fixed-horizon optimum, as for LM. On Rössler, ET improves both scopes.
 
 \paragraph{Failure on Lorenz-63.}
-At the two larger timesteps of Lorenz-63, ET is worse than the fixed-horizon optimum and than LM in both regimes. The FSLE of Lorenz-63 has no knee, so the tolerance falls back to the default, which the model's errors do not reach within ten steps by the end of training. ET then effectively trains on the full horizon $T_{\max}$, whereas the optimal fixed horizon is much shorter. The fallback tolerance is too permissive for a system whose useful horizon lies well inside the search range.
+At the two larger timesteps of Lorenz-63, ET is worse than the fixed-horizon optimum and than LM in both regimes. The FSLE of Lorenz-63 has no knee, so the tolerance falls back to the default, which the model's errors do not reach within ten steps by the end of training. ET then effectively trains on the full horizon $T_{\max}$ (Table~\ref{tab:horizons}), whereas the optimal fixed horizon is much shorter. The fallback tolerance is too permissive for a system whose useful horizon lies well inside the search range.
 
 \input{tables/table_et_tolerance}
 
